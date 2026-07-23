@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Transition & Retention Dashboard</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Material Icons Round -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Memuat Data...</div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <img src="https://pppkpetra.sch.id/wp-content/uploads/2020/03/logo.png" alt="Logo Instansi" style="height: 45px; width: auto; margin-right: 8px;">
+                    <span class="logo-text">Internal</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <ul id="navMenu">
+                    <li class="nav-item active" data-target="section-overview">
+                        <span class="material-icons-round">insights</span>
+                        <span>Overview</span>
+                    </li>
+                    <li class="nav-item" data-target="section-trends">
+                        <span class="material-icons-round">timeline</span>
+                        <span>Analisis Tren</span>
+                    </li>
+                    <li class="nav-item" data-target="section-survey">
+                        <span class="material-icons-round">assignment</span>
+                        <span>Analisis Survei</span>
+                    </li>
+                    <li class="nav-item" data-target="section-details">
+                        <span class="material-icons-round">table_chart</span>
+                        <span>Detail Data</span>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="data-status">
+                    <span class="status-dot"></span>
+                    <span id="dataStatusText">Data Source: Sample</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Topbar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <button id="menuToggle" class="icon-btn">
+                        <span class="material-icons-round">menu</span>
+                    </button>
+                    <div class="page-titles">
+                        <h1 id="pageTitle">Overview</h1>
+                        <p id="pageSubtitle">Ringkasan transisi dan retensi siswa</p>
+                    </div>
+                </div>
+                <div class="topbar-right">
+                    <div class="global-filters">
+                        <div class="filter-group" id="filterGroupPeriod" tabindex="0">
+                            <span class="material-icons-round filter-icon">date_range</span>
+                            <div class="custom-dropdown" id="dropdownPeriod">
+                                <div class="dropdown-selected">Semua Tahun Ajaran</div>
+                                <div class="dropdown-options">
+                                    <!-- Options populated by JS -->
+                                </div>
+                            </div>
+                            <span class="material-icons-round dropdown-arrow">expand_more</span>
+                        </div>
+                        <div class="filter-group" id="filterGroupJenjang" tabindex="0">
+                            <span class="material-icons-round filter-icon">school</span>
+                            <div class="custom-dropdown" id="dropdownJenjang">
+                                <div class="dropdown-selected">Semua Jenjang</div>
+                                <div class="dropdown-options">
+                                    <div class="dropdown-option" data-value="all">Semua Jenjang</div>
+                                    <div class="dropdown-option" data-value="TK">TK</div>
+                                    <div class="dropdown-option" data-value="SD">SD</div>
+                                    <div class="dropdown-option" data-value="SMP">SMP</div>
+                                </div>
+                            </div>
+                            <span class="material-icons-round dropdown-arrow">expand_more</span>
+                        </div>
+                        <div class="filter-group" id="filterGroupOrg" tabindex="0">
+                            <span class="material-icons-round filter-icon">business</span>
+                            <div class="custom-dropdown" id="dropdownOrg">
+                                <div class="dropdown-selected">Semua Unit</div>
+                                <div class="dropdown-options">
+                                    <!-- Options populated by JS -->
+                                </div>
+                            </div>
+                            <span class="material-icons-round dropdown-arrow">expand_more</span>
+                        </div>
+                        <button id="btnRefresh" class="icon-btn btn-refresh" title="Refresh Data">
+                            <span class="material-icons-round">refresh</span>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Sections Container -->
+            <div class="sections-container">
+                <!-- Overview Section -->
+                <section id="section-overview" class="dashboard-section active">
+                    <!-- KPIs -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card card-green">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Siswa Lanjut</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">school</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="kpiTotalLanjut" class="kpi-value">0</h2>
+                                <div class="kpi-trend" id="kpiLanjutDelta">
+                                    <span class="material-icons-round trend-icon">trending_up</span>
+                                    <span class="trend-text">0% YoY</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-red">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Siswa Keluar</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">exit_to_app</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="kpiTotalKeluar" class="kpi-value">0</h2>
+                                <div class="kpi-trend" id="kpiKeluarDelta">
+                                    <span class="material-icons-round trend-icon">trending_down</span>
+                                    <span class="trend-text">0% YoY</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-green-alt">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Retention Rate</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">verified</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="kpiRetentionRate" class="kpi-value">0%</h2>
+                                <div class="kpi-trend" id="kpiRetentionDelta">
+                                    <span class="material-icons-round trend-icon">trending_flat</span>
+                                    <span class="trend-text">0% YoY</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-neutral">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Siswa</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">groups</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="kpiTotalSiswa" class="kpi-value">0</h2>
+                                <div class="kpi-trend" id="kpiTotalDelta">
+                                    <span class="material-icons-round trend-icon">trending_flat</span>
+                                    <span class="trend-text">0% YoY</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Row -->
+                    <div class="charts-row split-2-1">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Tren Lanjut vs Keluar</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="overviewTrendChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Komposisi Status</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="overviewDonutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analisis Tren Section -->
+                <section id="section-trends" class="dashboard-section">
+                    <div class="chart-card full-width">
+                        <div class="chart-header">
+                            <h3>Tren Pertumbuhan Siswa (Lanjut vs Keluar)</h3>
+                        </div>
+                        <div class="chart-body chart-body-large">
+                            <canvas id="trendLineChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="charts-row split-1-1">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Distribusi Siswa Keluar per Jenjang</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="keluarJenjangChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Distribusi Siswa Lanjut per Jenjang</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="lanjutJenjangChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Analisis Survei Section -->
+                <section id="section-survey" class="dashboard-section">
+                    <div id="surveyBanner" class="info-banner">
+                        <span class="material-icons-round">info</span>
+                        <p>Data survei ini masih menggunakan data contoh (placeholder). Integrasi dengan sistem survei sebenarnya sedang dalam pengembangan.</p>
+                    </div>
+                    <div class="charts-row split-1-1">
+                        <div class="chart-card border-top-red">
+                            <div class="chart-header header-red">
+                                <h3>Top Alasan Keluar</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="alasanKeluarChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card border-top-green">
+                            <div class="chart-header header-green">
+                                <h3>Top Alasan Lanjut</h3>
+                            </div>
+                            <div class="chart-body">
+                                <canvas id="alasanLanjutChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Detail Data Section -->
+                <section id="section-details" class="dashboard-section">
+                    <div class="chart-card full-width data-table-card">
+                        <div class="table-controls">
+                            <div class="search-box">
+                                <span class="material-icons-round">search</span>
+                                <input type="text" id="tableSearch" placeholder="Cari unit atau kelas...">
+                            </div>
+                            <div class="table-actions">
+                                <button id="btnExport" class="btn btn-outline">
+                                    <span class="material-icons-round">download</span>
+                                    <span>Export CSV</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="drilldownTable" class="custom-table">
+                                <thead id="drilldownHeader">
+                                    <tr>
+                                        <th data-sort="org">Unit <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th data-sort="kelas">Kelas <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th data-sort="jenjang">Jenjang <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th data-sort="lanjut">Jumlah Lanjut <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th data-sort="keluar">Jumlah Keluar <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th data-sort="retention">Retention Rate <span class="material-icons-round sort-icon">sort</span></th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="drilldownBody">
+                                    <!-- Table rows injected via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="table-footer">
+                            <div id="tableInfo" class="table-info">Menampilkan 0 dari 0 data</div>
+                            <div class="pagination">
+                                <button id="prevPage" class="icon-btn"><span class="material-icons-round">chevron_left</span></button>
+                                <span id="pageIndicator" class="page-indicator">Halaman 1</span>
+                                <button id="nextPage" class="icon-btn"><span class="material-icons-round">chevron_right</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="script.js?v=4"></script>
+</body>
+</html>

@@ -1,7 +1,6 @@
-// F:\PKL\Project PKL\dashboard\script.js
 const DATA_CONFIG = {
-    transitionDataPath: 'data/transition_data.json',
-    surveyDataPath: 'data/survey_data.json',
+    transitionDataPath: './data/transition_data.json',
+    surveyDataPath: './data/survey_data.json',
 };
 
 // Global state
@@ -44,8 +43,15 @@ const els = {
     }
 };
 
-Chart.defaults.color = '#A1A1AA';
+Chart.defaults.color = '#64748b';
+Chart.defaults.borderColor = 'rgba(0, 0, 0, 0.06)';
 Chart.defaults.font.family = "'Inter', sans-serif";
+if (Chart.defaults.plugins && Chart.defaults.plugins.legend) {
+    Chart.defaults.plugins.legend.labels.usePointStyle = true;
+    Chart.defaults.plugins.legend.labels.boxWidth = 8;
+    Chart.defaults.plugins.legend.labels.boxHeight = 8;
+    Chart.defaults.plugins.legend.labels.padding = 20;
+}
 
 // Initialize Dashboard
 async function init() {
@@ -455,8 +461,8 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Lanjut', data: dataLanjut, borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.4 },
-                { label: 'Keluar', data: dataKeluar, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.4 }
+                { label: 'Lanjut', data: dataLanjut, borderColor: '#02C5BE', backgroundColor: 'rgba(2, 197, 190, 0.15)', fill: true, tension: 0.4 },
+                { label: 'Keluar', data: dataKeluar, borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.15)', fill: true, tension: 0.4 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -471,7 +477,7 @@ function renderCharts(filtered = getFilteredRecords()) {
         plugins: [ChartDataLabels],
         data: {
             labels: ['Lanjut', 'Keluar'],
-            datasets: [{ data: [totL, totK], backgroundColor: ['#10B981', '#EF4444'], borderWidth: 0, cutout: '75%', hoverOffset: 10 }]
+            datasets: [{ data: [totL, totK], backgroundColor: ['#02C5BE', '#ff9800'], borderWidth: 0, cutout: '75%', hoverOffset: 10 }]
         },
         options: { 
             responsive: true, maintainAspectRatio: false,
@@ -489,8 +495,8 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Lanjut', data: dataLanjut, borderColor: '#10B981', backgroundColor: 'rgba(16, 185, 129, 0.15)', fill: true, tension: 0.4 },
-                { label: 'Keluar', data: dataKeluar, borderColor: '#EF4444', backgroundColor: 'rgba(239, 68, 68, 0.15)', fill: true, tension: 0.4 }
+                { label: 'Lanjut', data: dataLanjut, borderColor: '#02C5BE', backgroundColor: 'rgba(2, 197, 190, 0.15)', fill: true, tension: 0.4 },
+                { label: 'Keluar', data: dataKeluar, borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.15)', fill: true, tension: 0.4 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -505,9 +511,9 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'TK', data: labels.map(p => aggJenjang[p].keluar.TK), backgroundColor: '#FCA5A5' },
-                { label: 'SD', data: labels.map(p => aggJenjang[p].keluar.SD), backgroundColor: '#EF4444' },
-                { label: 'SMP', data: labels.map(p => aggJenjang[p].keluar.SMP), backgroundColor: '#991B1B' }
+                { label: 'TK', data: labels.map(p => aggJenjang[p].keluar.TK), backgroundColor: '#ffcc80' },
+                { label: 'SD', data: labels.map(p => aggJenjang[p].keluar.SD), backgroundColor: '#ff9800' },
+                { label: 'SMP', data: labels.map(p => aggJenjang[p].keluar.SMP), backgroundColor: '#e65100' }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } }
@@ -519,9 +525,9 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'TK', data: labels.map(p => aggJenjang[p].lanjut.TK), backgroundColor: '#34D399' },
-                { label: 'SD', data: labels.map(p => aggJenjang[p].lanjut.SD), backgroundColor: '#10B981' },
-                { label: 'SMP', data: labels.map(p => aggJenjang[p].lanjut.SMP), backgroundColor: '#047857' }
+                { label: 'TK', data: labels.map(p => aggJenjang[p].lanjut.TK), backgroundColor: '#80cbc4' },
+                { label: 'SD', data: labels.map(p => aggJenjang[p].lanjut.SD), backgroundColor: '#02C5BE' },
+                { label: 'SMP', data: labels.map(p => aggJenjang[p].lanjut.SMP), backgroundColor: '#00695c' }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } }
@@ -540,7 +546,7 @@ function renderCharts(filtered = getFilteredRecords()) {
             type: 'bar',
             data: {
                 labels: aK.map(d => d.alasan),
-                datasets: [{ label: 'Jumlah', data: aK.map(d => d.jumlah), backgroundColor: '#EF4444', borderRadius: 4 }]
+                datasets: [{ label: 'Jumlah', data: aK.map(d => d.jumlah), backgroundColor: '#ff9800', borderRadius: 4 }]
             },
             options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
@@ -550,7 +556,7 @@ function renderCharts(filtered = getFilteredRecords()) {
             type: 'bar',
             data: {
                 labels: aL.map(d => d.alasan),
-                datasets: [{ label: 'Jumlah', data: aL.map(d => d.jumlah), backgroundColor: '#10B981', borderRadius: 6 }]
+                datasets: [{ label: 'Jumlah', data: aL.map(d => d.jumlah), backgroundColor: '#02C5BE', borderRadius: 6 }]
             },
             options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
         });
@@ -646,9 +652,7 @@ function renderTable() {
     paginated.forEach(row => {
         const badge = row.retention >= 70 ? '<span class="badge-lanjut">Tinggi</span>' : '<span class="badge-keluar">Rendah</span>';
         
-        // Heatmap color for retention cell
-        const hue = (row.retention / 100) * 120; // 0=red, 120=green
-        const bg = `rgba(${hue < 60 ? 255 : 255 - ((hue-60)*4)}, ${hue > 60 ? 255 : (hue*4)}, 0, 0.15)`;
+        // Simply use clean background, badges will show status
         
         html += `
             <tr>
@@ -657,7 +661,7 @@ function renderTable() {
                 <td>${row.jenjang}</td>
                 <td>${row.lanjut}</td>
                 <td>${row.keluar}</td>
-                <td style="background-color: ${bg}; font-weight: 600">${row.retention.toFixed(1)}%</td>
+                <td style="font-weight: 600">${row.retention.toFixed(1)}%</td>
                 <td>${badge}</td>
             </tr>
         `;

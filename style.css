@@ -904,3 +904,135 @@ body {
     .table-controls { flex-direction: column; gap: 20px; align-items: stretch; }
     .search-box { width: 100%; }
 }
+
+/* ===== Status Summary Cards ===== */
+.status-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.status-summary-card {
+    background: var(--bg-card);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+}
+
+.status-summary-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+.status-summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.status-summary-icon .material-icons-round {
+    font-size: 24px;
+}
+
+.status-summary-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.status-summary-count {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.5px;
+}
+
+.status-summary-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+.status-summary-threshold {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Card colour variants */
+.card-tinggi .status-summary-icon { background: rgba(2, 197, 190, 0.12); color: var(--green-bright); }
+.card-tinggi .status-summary-count { color: var(--green-dark); }
+.card-tinggi { border-left: 3px solid var(--green-bright); }
+
+.card-sedang .status-summary-icon { background: rgba(255, 152, 0, 0.1); color: var(--yellow-primary); }
+.card-sedang .status-summary-count { color: var(--yellow-dark); }
+.card-sedang { border-left: 3px solid var(--yellow-primary); }
+
+.card-rendah .status-summary-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.card-rendah .status-summary-count { color: #dc2626; }
+.card-rendah { border-left: 3px solid #ef4444; }
+
+.card-total .status-summary-icon { background: rgba(100, 116, 139, 0.1); color: var(--text-secondary); }
+.card-total .status-summary-count { color: var(--text-primary); font-size: 22px; }
+.card-total { border-left: 3px solid var(--text-muted); }
+
+/* 3-tier badge variants */
+.badge-tinggi, .badge-sedang, .badge-rendah {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+    letter-spacing: 0.5px;
+}
+
+.badge-tinggi {
+    background-color: rgba(2, 197, 190, 0.15);
+    color: var(--green-dark);
+    border: 1px solid rgba(2, 197, 190, 0.35);
+}
+
+.badge-sedang {
+    background-color: rgba(255, 152, 0, 0.12);
+    color: var(--yellow-dark);
+    border: 1px solid rgba(255, 152, 0, 0.35);
+}
+
+.badge-rendah {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+@media (max-width: 1024px) {
+    .status-summary-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+    .status-summary-grid { grid-template-columns: 1fr; }
+    .status-summary-count { font-size: 24px; }
+}
+
+/* Threshold info bar */
+.threshold-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    margin-bottom: 12px;
+}
+

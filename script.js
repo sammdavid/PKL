@@ -178,12 +178,34 @@ function setupEventListeners() {
     });
     setupCustomDropdown('filterGroupOrg', 'organization', () => { updateDashboard(); });
 
+    function resetAllFilters() {
+        state.filters.period = 'all';
+        state.filters.jenjang = 'all';
+        state.filters.organization = 'all';
+        state.tableSearch = '';
+        if (els.table.search) els.table.search.value = '';
+        
+        const jenjangSel = document.querySelector('#filterGroupJenjang .dropdown-selected');
+        if (jenjangSel) jenjangSel.textContent = 'Semua Jenjang';
+        document.querySelectorAll('#filterGroupJenjang .dropdown-option').forEach(o => {
+            o.classList.toggle('selected', o.dataset.value === 'all');
+        });
+        
+        populateFilters();
+        updateDashboard();
+        showToast('Semua filter dikembalikan ke default', 'success');
+    }
+
+    const btnResetFilter = document.getElementById('btnResetFilter');
+    if (btnResetFilter) {
+        btnResetFilter.addEventListener('click', resetAllFilters);
+    }
+
     // Refresh
     els.btnRefresh.addEventListener('click', async () => {
         els.btnRefresh.classList.add('spinning');
         await loadData();
-        populateFilters();
-        updateDashboard();
+        resetAllFilters();
         setTimeout(() => els.btnRefresh.classList.remove('spinning'), 500);
     });
 

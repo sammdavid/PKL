@@ -3,6 +3,32 @@ const DATA_CONFIG = {
     surveyDataPath: './data/survey_data.json',
 };
 
+// --- Retention Status Classification (Dynamic: Mean ± 0.5 SD) ---
+// Threshold dihitung otomatis dari data yang sedang ditampilkan.
+// Multiplier 0.5 dipilih karena menghasilkan distribusi paling seimbang (~34/39/26%).
+const SD_MULTIPLIER = 0.5;
+
+function computeThresholds(tableData) {
+    if (tableData.length < 2) return { tinggi: 100, rendah: 0, mean: 0, sd: 0 };
+    const rates = tableData.map(d => d.retention);
+    const n = rates.length;
+    const mean = rates.reduce((a, b) => a + b, 0) / n;
+    const variance = rates.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+    const sd = Math.sqrt(variance);
+    return {
+        tinggi: mean + SD_MULTIPLIER * sd,
+        rendah: mean - SD_MULTIPLIER * sd,
+        mean: mean,
+        sd: sd
+    };
+}
+
+function getStatusLabel(retentionRate) {
+    if (retentionRate >= state.thresholds.tinggi) return 'tinggi';
+    if (retentionRate >= state.thresholds.rendah) return 'sedang';
+    return 'rendah';
+}
+
 // Global state
 let state = {
     records: [],
@@ -18,7 +44,8 @@ let state = {
     tableSort: { col: 'org', asc: true },
     tablePage: 1,
     tableRowsPerPage: 15,
-    tableSearch: ''
+    tableSearch: '',
+    thresholds: { tinggi: 100, rendah: 0, mean: 0, sd: 0 } // computed dynamically
 };
 
 // DOM Elements
@@ -269,7 +296,57 @@ function updateDashboard() {
     // Prepare table data
     state.tableData = getClassroomDrilldown(filtered);
     sortData();
+    updateStatusSummary(state.tableData);
     renderTable();
+}
+
+function updateStatusSummary(tableData) {
+    // Compute dynamic thresholds from current filtered data
+    state.thresholds = computeThresholds(tableData);
+    const { tinggi: tHigh, rendah: tLow, mean, sd } = state.thresholds;
+
+    let cntTinggi = 0, cntSedang = 0, cntRendah = 0;
+    tableData.forEach(row => {
+        const status = getStatusLabel(row.retention);
+        if (status === 'tinggi') cntTinggi++;
+        else if (status === 'sedang') cntSedang++;
+        else cntRendah++;
+    });
+
+    const elTinggi = document.getElementById('summaryTinggi');
+    const elSedang = document.getElementById('summarySedang');
+    const elRendah = document.getElementById('summaryRendah');
+    const elTotal = document.getElementById('summaryTotal');
+
+    if (!elTinggi) return;
+
+    animateCount(elTinggi, cntTinggi);
+    animateCount(elSedang, cntSedang);
+    animateCount(elRendah, cntRendah);
+    if (elTotal) elTotal.textContent = tableData.length + ' kelas';
+
+    // Update dynamic threshold labels in cards
+    const elThTinggi = document.getElementById('thresholdTinggi');
+    const elThSedang = document.getElementById('thresholdSedang');
+    const elThRendah = document.getElementById('thresholdRendah');
+    const elThInfo   = document.getElementById('thresholdInfo');
+
+    if (elThTinggi) elThTinggi.textContent = '\u2265 ' + tHigh.toFixed(1) + '%';
+    if (elThSedang) elThSedang.textContent = tLow.toFixed(1) + '\u2013' + tHigh.toFixed(1) + '%';
+    if (elThRendah) elThRendah.textContent = '< ' + tLow.toFixed(1) + '%';
+    if (elThInfo)   elThInfo.textContent = 'Mean ' + mean.toFixed(1) + '% \u00b1 0.5 SD (' + sd.toFixed(1) + '%)';
+}
+
+function animateCount(el, end) {
+    let start = 0;
+    const duration = 600;
+    const startTime = performance.now();
+    const step = (now) => {
+        const progress = Math.min((now - startTime) / duration, 1);
+        el.textContent = Math.round(progress * end);
+        if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
 }
 
 function getFilteredRecords() {
@@ -650,7 +727,10 @@ function renderTable() {
     const paginated = filtered.slice(start, start + state.tableRowsPerPage);
     
     paginated.forEach(row => {
-        const badge = row.retention >= 70 ? '<span class="badge-lanjut">Tinggi</span>' : '<span class="badge-keluar">Rendah</span>';
+        const statusKey = getStatusLabel(row.retention);
+        const badgeClass = statusKey === 'tinggi' ? 'badge-tinggi' : statusKey === 'sedang' ? 'badge-sedang' : 'badge-rendah';
+        const badgeLabel = statusKey === 'tinggi' ? 'Tinggi' : statusKey === 'sedang' ? 'Sedang' : 'Rendah';
+        const badge = `<span class="${badgeClass}">${badgeLabel}</span>`;
         
         // Simply use clean background, badges will show status
         

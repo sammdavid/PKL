@@ -254,6 +254,58 @@
 
                 <!-- Detail Data Section -->
                 <section id="section-details" class="dashboard-section">
+
+                    <!-- Status Summary Cards -->
+                    <div class="status-summary-grid">
+                        <div class="status-summary-card card-tinggi">
+                            <div class="status-summary-icon">
+                                <span class="material-icons-round">verified</span>
+                            </div>
+                            <div class="status-summary-body">
+                                <span class="status-summary-count" id="summaryTinggi">0</span>
+                                <span class="status-summary-label">Kelas Tinggi</span>
+                                <span class="status-summary-threshold" id="thresholdTinggi">Menghitung...</span>
+                            </div>
+                        </div>
+                        <div class="status-summary-card card-sedang">
+                            <div class="status-summary-icon">
+                                <span class="material-icons-round">trending_flat</span>
+                            </div>
+                            <div class="status-summary-body">
+                                <span class="status-summary-count" id="summarySedang">0</span>
+                                <span class="status-summary-label">Kelas Sedang</span>
+                                <span class="status-summary-threshold" id="thresholdSedang">Menghitung...</span>
+                            </div>
+                        </div>
+                        <div class="status-summary-card card-rendah">
+                            <div class="status-summary-icon">
+                                <span class="material-icons-round">warning_amber</span>
+                            </div>
+                            <div class="status-summary-body">
+                                <span class="status-summary-count" id="summaryRendah">0</span>
+                                <span class="status-summary-label">Kelas Rendah</span>
+                                <span class="status-summary-threshold" id="thresholdRendah">Menghitung...</span>
+                            </div>
+                        </div>
+                        <div class="status-summary-card card-total">
+                            <div class="status-summary-icon">
+                                <span class="material-icons-round">table_rows</span>
+                            </div>
+                            <div class="status-summary-body">
+                                <span class="status-summary-count" id="summaryTotal">0 kelas</span>
+                                <span class="status-summary-label">Total Kelas</span>
+                                <span class="status-summary-threshold">Dari filter aktif</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Threshold Info Bar -->
+                    <div class="threshold-info-bar">
+                        <span class="material-icons-round" style="font-size:16px; color: var(--text-muted);">info_outline</span>
+                        <span id="thresholdInfo" style="color: var(--text-muted); font-size: 13px; font-weight: 500;">Menghitung threshold...</span>
+                        <span style="color: var(--text-muted); font-size: 13px;"> &mdash; Threshold dihitung dinamis dari data yang ditampilkan (Mean &plusmn; 0.5 SD)</span>
+                    </div>
+
                     <div class="chart-card full-width data-table-card">
                         <div class="table-controls">
                             <div class="search-box">

@@ -3,6 +3,61 @@ const DATA_CONFIG = {
     surveyDataPath: './data/survey_data.json',
 };
 
+// --- Official Petra Organization Code to Full Name Mapping ---
+const ORG_NAMES = {
+    // KB & TK
+    "K01": "KB & TK Kristen Petra 1",
+    "K02": "KB & TK Kristen Petra 2",
+    "K03": "KB & TK Kristen Petra 3",
+    "K04": "KB & TK Kristen Petra 4",
+    "K05": "KB & TK Kristen Petra 5",
+    "K06": "KB & TK Kristen Petra 6",
+    "K07": "KB & TK Kristen Petra 7",
+    "K08": "KB & TK Kristen Petra 8",
+    "K09": "KB & TK Kristen Petra 9",
+    "K10": "KB & TK Kristen Petra 10",
+    "K11": "KB & TK Kristen Petra 11",
+    "K12": "KB & TK Kristen Petra 12",
+    "K13": "KB & TK Kristen Petra 13",
+
+    // SD
+    "D01": "SD Kristen Petra 1",
+    "D02": "SD Kristen Petra 2",
+    "D03": "SD Kristen Petra 3",
+    "D04": "SD Kristen Petra 4",
+    "D05": "SD Kristen Petra 5",
+    "D06": "SD Kristen Petra 6",
+    "D07": "SD Kristen Petra 7",
+    "D08": "SD Kristen Petra 8",
+    "D09": "SD Kristen Petra 9",
+    "D10": "SD Kristen Petra 10",
+    "D11": "SD Kristen Petra 11",
+    "D12": "SD Kristen Petra 12",
+    "D13": "SD Kristen Petra 13",
+
+    // SMP
+    "P01": "SMP Kristen Petra 1",
+    "P02": "SMP Kristen Petra 2",
+    "P03": "SMP Kristen Petra 3",
+    "P04": "SMP Kristen Petra 4",
+    "P05": "SMP Kristen Petra 5",
+    "P06": "SMP Kristen Petra Acitya",
+    "P07": "SMP Kristen Petra 7",
+
+    // SMA / SMK
+    "S01": "SMA Kristen Petra 1",
+    "S02": "SMA Kristen Petra 2",
+    "S03": "SMA Kristen Petra 3",
+    "S04": "SMA Kristen Petra 4",
+    "S05": "SMA Kristen Petra 5",
+    "S06": "SMA Kristen Petra Acitya",
+    "M01": "SMK Kristen Petra"
+};
+
+function getOrgName(code) {
+    return ORG_NAMES[code] || code;
+}
+
 // --- Retention Status Classification (Dynamic: Mean ± 0.5 SD) ---
 // Threshold dihitung otomatis dari data yang sedang ditampilkan.
 // Multiplier 0.5 dipilih karena menghasilkan distribusi paling seimbang (~34/39/26%).
@@ -57,7 +112,6 @@ const els = {
         jenjang: document.getElementById('filterGroupJenjang'),
         org: document.getElementById('filterGroupOrg')
     },
-    btnRefresh: document.getElementById('btnRefresh'),
     table: {
         body: document.getElementById('drilldownBody'),
         search: document.getElementById('tableSearch'),
@@ -100,11 +154,11 @@ async function loadData() {
             state.records = transRes.value.records;
             state.metadata = transRes.value.metadata;
             showToast('Data berhasil dimuat', 'success');
-            els.dataStatus.textContent = 'Data Source: Live';
+            if (els.dataStatus) els.dataStatus.textContent = 'Data Source: Live';
         } else {
             generateSampleData();
             showToast('Menggunakan sample data', 'error');
-            els.dataStatus.textContent = 'Data Source: Sample';
+            if (els.dataStatus) els.dataStatus.textContent = 'Data Source: Sample';
         }
 
         if (surveyRes.status === 'fulfilled') {
@@ -116,7 +170,7 @@ async function loadData() {
         generateSampleData();
         state.survey = generateSampleSurveyData();
         showToast('Gagal memuat data. Menggunakan sample.', 'error');
-        els.dataStatus.textContent = 'Data Source: Sample';
+        if (els.dataStatus) els.dataStatus.textContent = 'Data Source: Sample';
     } finally {
         showLoading(false);
     }
@@ -138,7 +192,7 @@ function setupEventListeners() {
                 'section-overview': {t: 'Overview', s: 'Ringkasan transisi dan retensi siswa'},
                 'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
                 'section-survey': {t: 'Analisis Survei', s: 'Data alasan siswa lanjut dan keluar'},
-                'section-details': {t: 'Detail Data', s: 'Data detail per unit dan kelas'}
+                'section-details': {t: 'Detail Data', s: 'Data detail per sekolah dan kelas'}
             };
             document.getElementById('pageTitle').textContent = titles[item.dataset.target].t;
             document.getElementById('pageSubtitle').textContent = titles[item.dataset.target].s;
@@ -210,6 +264,8 @@ function setupEventListeners() {
         state.filters.jenjang = 'all';
         state.filters.organization = 'all';
         state.tableSearch = '';
+        state.tablePage = 1;
+        state.tableSort = { col: 'org', asc: true };
         if (els.table.search) els.table.search.value = '';
         
         const jenjangSel = document.querySelector('#filterGroupJenjang .dropdown-selected');
@@ -220,21 +276,13 @@ function setupEventListeners() {
         
         populateFilters();
         updateDashboard();
-        showToast('Semua filter dikembalikan ke default', 'success');
+        showToast('Semua filter & sorting dikembalikan ke default', 'success');
     }
 
     const btnResetFilter = document.getElementById('btnResetFilter');
     if (btnResetFilter) {
         btnResetFilter.addEventListener('click', resetAllFilters);
     }
-
-    // Refresh
-    els.btnRefresh.addEventListener('click', async () => {
-        els.btnRefresh.classList.add('spinning');
-        await loadData();
-        resetAllFilters();
-        setTimeout(() => els.btnRefresh.classList.remove('spinning'), 500);
-    });
 
     // Table
     els.table.search.addEventListener('input', (e) => {
@@ -303,9 +351,11 @@ function updateOrgFilter() {
     
     orgs = [...new Set(orgs)].sort();
     
-    const orgOpts = [{value: 'all', label: 'Semua Unit', selected: state.filters.organization === 'all'}];
+    const orgOpts = [{value: 'all', label: 'Semua Sekolah', selected: state.filters.organization === 'all'}];
     orgs.forEach(o => {
-        orgOpts.push({value: o, label: o, selected: state.filters.organization === o});
+        const name = getOrgName(o);
+        const labelText = name !== o ? `${o} — ${name}` : o;
+        orgOpts.push({value: o, label: labelText, selected: state.filters.organization === o});
     });
     updateDropdownOptions('filterGroupOrg', orgOpts);
 }
@@ -345,7 +395,7 @@ function updateStatusSummary(tableData) {
     animateCount(elTinggi, cntTinggi);
     animateCount(elSedang, cntSedang);
     animateCount(elRendah, cntRendah);
-    if (elTotal) elTotal.textContent = tableData.length + ' kelas';
+    if (elTotal) animateCount(elTotal, tableData.length);
 
     // Update dynamic threshold labels in cards
     const elThTinggi = document.getElementById('thresholdTinggi');
@@ -756,6 +806,7 @@ function renderTable() {
     if (state.tableSearch) {
         filtered = filtered.filter(row => 
             row.org.toLowerCase().includes(state.tableSearch) || 
+            getOrgName(row.org).toLowerCase().includes(state.tableSearch) || 
             row.kelas.toLowerCase().includes(state.tableSearch)
         );
     }
@@ -772,11 +823,14 @@ function renderTable() {
         const badgeLabel = statusKey === 'tinggi' ? 'Tinggi' : statusKey === 'sedang' ? 'Sedang' : 'Rendah';
         const badge = `<span class="${badgeClass}">${badgeLabel}</span>`;
         
-        // Simply use clean background, badges will show status
+        const orgName = getOrgName(row.org);
+        const orgDisplay = (orgName !== row.org)
+            ? `<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="font-weight: 600; color: var(--text-primary); white-space: nowrap;">${orgName}</span><span style="font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,0.06); color: var(--text-secondary); font-weight: 600; border: 1px solid rgba(0,0,0,0.08); white-space: nowrap;">${row.org}</span></div>`
+            : `<span style="font-weight: 600; color: var(--text-primary); white-space: nowrap;">${row.org}</span>`;
         
         html += `
             <tr>
-                <td>${row.org}</td>
+                <td>${orgDisplay}</td>
                 <td>${row.kelas}</td>
                 <td>${row.jenjang}</td>
                 <td>${row.lanjut}</td>
@@ -815,9 +869,9 @@ function renderTable() {
 function exportToCSV() {
     if (state.tableData.length === 0) return;
     
-    const headers = ['Unit', 'Kelas', 'Jenjang', 'Jumlah Lanjut', 'Jumlah Keluar', 'Retention Rate'];
+    const headers = ['Kode Sekolah', 'Nama Sekolah', 'Kelas', 'Jenjang', 'Jumlah Lanjut', 'Jumlah Keluar', 'Retention Rate'];
     const rows = state.tableData.map(r => 
-        [r.org, r.kelas, r.jenjang, r.lanjut, r.keluar, r.retention.toFixed(1) + '%'].join(',')
+        [r.org, `"${getOrgName(r.org)}"`, r.kelas, r.jenjang, r.lanjut, r.keluar, r.retention.toFixed(1) + '%'].join(',')
     );
     
     const csv = [headers.join(','), ...rows].join('\n');

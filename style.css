@@ -25,7 +25,7 @@
     --border-color: rgba(0, 0, 0, 0.08);
     --border-highlight: rgba(0, 0, 0, 0.15);
     
-    --sidebar-width: 280px;
+    --sidebar-width: 215px;
     --topbar-height: 80px;
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -90,7 +90,7 @@ body {
     height: var(--topbar-height);
     display: flex;
     align-items: center;
-    padding: 0 32px;
+    padding: 0 22px;
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -130,8 +130,8 @@ body {
 .nav-item {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 14px 32px;
+    gap: 14px;
+    padding: 14px 22px;
     color: var(--text-secondary);
     cursor: pointer;
     transition: var(--transition);
@@ -162,7 +162,7 @@ body {
 }
 
 .sidebar-footer {
-    padding: 24px 32px;
+    padding: 20px 22px;
     border-top: 1px solid var(--border-color);
     background: rgba(0,0,0,0.1);
 }
@@ -344,7 +344,9 @@ body {
     position: absolute;
     top: calc(100% + 8px);
     left: 0;
-    right: 0;
+    min-width: 100%;
+    width: max-content;
+    max-width: 420px;
     background-color: var(--bg-dark);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
@@ -359,6 +361,7 @@ body {
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     max-height: 300px;
     overflow-y: auto;
+    white-space: nowrap;
 }
 
 .filter-group.active .dropdown-options {
@@ -372,6 +375,7 @@ body {
     cursor: pointer;
     border-bottom: 1px solid rgba(0,0,0,0.02);
     transition: background 0.2s;
+    white-space: nowrap;
 }
 
 .dropdown-option:last-child {
@@ -410,16 +414,6 @@ body {
     border-color: var(--border-highlight);
     transform: translateY(-2px);
 }
-
-.btn-refresh .material-icons-round {
-    font-size: 22px;
-}
-.btn-refresh.spinning .material-icons-round {
-    animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-    color: var(--green-bright);
-}
-
-@keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* Sections */
 .sections-container {
@@ -714,9 +708,9 @@ body {
 }
 
 .custom-table th, .custom-table td {
-    padding: 18px 32px;
+    padding: 13px 14px;
     border-bottom: 1px solid var(--border-color);
-    font-size: 15px;
+    font-size: 14px;
 }
 
 .custom-table th {
@@ -729,6 +723,19 @@ body {
     text-transform: uppercase;
     font-size: 13px;
     white-space: nowrap;
+}
+
+/* First column (Sekolah (Kode)) left-aligned with breathing room */
+.custom-table th:nth-child(1),
+.custom-table td:nth-child(1) {
+    text-align: left;
+    padding-left: 48px;
+}
+
+/* Columns 2-7 centered (rata tengah) */
+.custom-table th:nth-child(n+2),
+.custom-table td:nth-child(n+2) {
+    text-align: center;
 }
 
 .custom-table th:hover {
@@ -754,6 +761,7 @@ body {
 .custom-table td {
     color: var(--text-primary);
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .custom-table tbody tr {
@@ -947,12 +955,19 @@ body {
 .status-summary-body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
     min-width: 0;
 }
 
+.status-summary-top {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
 .status-summary-count {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 700;
     line-height: 1;
     letter-spacing: -0.5px;
@@ -964,7 +979,7 @@ body {
     color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-top: 4px;
+    margin-top: 0;
 }
 
 .status-summary-threshold {
@@ -973,24 +988,24 @@ body {
     font-weight: 500;
 }
 
-/* Card colour variants */
-.card-tinggi .status-summary-icon { background: rgba(2, 197, 190, 0.12); color: var(--green-bright); }
+/* Card colour variants (Petra Hijau, Kuning, Hitam Theme - Sedang & Rendah swapped) */
+.card-tinggi .status-summary-icon { background: rgba(2, 197, 190, 0.15); color: var(--green-dark); }
 .card-tinggi .status-summary-count { color: var(--green-dark); }
-.card-tinggi { border-left: 3px solid var(--green-bright); }
+.card-tinggi { border-left: 4px solid var(--green-bright); }
 
-.card-sedang .status-summary-icon { background: rgba(255, 152, 0, 0.1); color: var(--yellow-primary); }
-.card-sedang .status-summary-count { color: var(--yellow-dark); }
-.card-sedang { border-left: 3px solid var(--yellow-primary); }
+.card-sedang .status-summary-icon { background: rgba(71, 85, 105, 0.12); color: #475569; }
+.card-sedang .status-summary-count { color: #0f172a; }
+.card-sedang { border-left: 4px solid #475569; }
 
-.card-rendah .status-summary-icon { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.card-rendah .status-summary-count { color: #dc2626; }
-.card-rendah { border-left: 3px solid #ef4444; }
+.card-rendah .status-summary-icon { background: rgba(255, 152, 0, 0.15); color: var(--yellow-dark); }
+.card-rendah .status-summary-count { color: var(--yellow-dark); }
+.card-rendah { border-left: 4px solid var(--yellow-primary); }
 
-.card-total .status-summary-icon { background: rgba(100, 116, 139, 0.1); color: var(--text-secondary); }
-.card-total .status-summary-count { color: var(--text-primary); font-size: 22px; }
-.card-total { border-left: 3px solid var(--text-muted); }
+.card-total .status-summary-icon { background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); }
+.card-total .status-summary-count { color: var(--text-primary); font-size: 26px; }
+.card-total { border-left: 4px solid var(--text-muted); }
 
-/* 3-tier badge variants */
+/* 3-tier badge variants (Petra Hijau, Kuning, Hitam Theme) */
 .badge-tinggi, .badge-sedang, .badge-rendah {
     padding: 6px 14px;
     border-radius: 999px;
@@ -1007,15 +1022,15 @@ body {
 }
 
 .badge-sedang {
-    background-color: rgba(255, 152, 0, 0.12);
-    color: var(--yellow-dark);
-    border: 1px solid rgba(255, 152, 0, 0.35);
+    background-color: rgba(71, 85, 105, 0.12);
+    color: #1e293b;
+    border: 1px solid rgba(71, 85, 105, 0.35);
 }
 
 .badge-rendah {
-    background-color: rgba(239, 68, 68, 0.1);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.25);
+    background-color: rgba(255, 152, 0, 0.15);
+    color: var(--yellow-dark);
+    border: 1px solid rgba(255, 152, 0, 0.35);
 }
 
 @media (max-width: 1024px) {

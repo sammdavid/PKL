@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Material Icons Round -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=15">
+    <link rel="stylesheet" href="style.css?v=31">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -52,12 +52,6 @@
                     </li>
                 </ul>
             </nav>
-            <div class="sidebar-footer">
-                <div class="data-status">
-                    <span class="status-dot"></span>
-                    <span id="dataStatusText">Data Source: Sample</span>
-                </div>
-            </div>
         </aside>
 
         <!-- Main Content -->
@@ -101,7 +95,7 @@
                         <div class="filter-group" id="filterGroupOrg" tabindex="0">
                             <span class="material-icons-round filter-icon">business</span>
                             <div class="custom-dropdown" id="dropdownOrg">
-                                <div class="dropdown-selected">Semua Unit</div>
+                                <div class="dropdown-selected">Semua Sekolah</div>
                                 <div class="dropdown-options">
                                     <!-- Options populated by JS -->
                                 </div>
@@ -111,9 +105,6 @@
                         <button id="btnResetFilter" class="btn btn-outline" style="height: 40px; padding: 0 14px; gap: 6px; font-size: 13px; border-color: rgba(0,0,0,0.12); display: flex; align-items: center;" title="Kembalikan semua filter ke default">
                             <span class="material-icons-round" style="font-size: 18px;">filter_alt_off</span>
                             <span>Reset Filter</span>
-                        </button>
-                        <button id="btnRefresh" class="icon-btn btn-refresh" title="Refresh Data">
-                            <span class="material-icons-round">refresh</span>
                         </button>
                     </div>
                 </div>
@@ -266,8 +257,10 @@
                                 <span class="material-icons-round">verified</span>
                             </div>
                             <div class="status-summary-body">
-                                <span class="status-summary-count" id="summaryTinggi">0</span>
-                                <span class="status-summary-label">Kelas Tinggi</span>
+                                <div class="status-summary-top">
+                                    <span class="status-summary-count" id="summaryTinggi">0</span>
+                                    <span class="status-summary-label">Kelas Tinggi</span>
+                                </div>
                                 <span class="status-summary-threshold" id="thresholdTinggi">Menghitung...</span>
                             </div>
                         </div>
@@ -276,18 +269,22 @@
                                 <span class="material-icons-round">trending_flat</span>
                             </div>
                             <div class="status-summary-body">
-                                <span class="status-summary-count" id="summarySedang">0</span>
-                                <span class="status-summary-label">Kelas Sedang</span>
+                                <div class="status-summary-top">
+                                    <span class="status-summary-count" id="summarySedang">0</span>
+                                    <span class="status-summary-label">Kelas Sedang</span>
+                                </div>
                                 <span class="status-summary-threshold" id="thresholdSedang">Menghitung...</span>
                             </div>
                         </div>
                         <div class="status-summary-card card-rendah">
                             <div class="status-summary-icon">
-                                <span class="material-icons-round">warning_amber</span>
+                                <span class="material-icons-round">trending_down</span>
                             </div>
                             <div class="status-summary-body">
-                                <span class="status-summary-count" id="summaryRendah">0</span>
-                                <span class="status-summary-label">Kelas Rendah</span>
+                                <div class="status-summary-top">
+                                    <span class="status-summary-count" id="summaryRendah">0</span>
+                                    <span class="status-summary-label">Kelas Rendah</span>
+                                </div>
                                 <span class="status-summary-threshold" id="thresholdRendah">Menghitung...</span>
                             </div>
                         </div>
@@ -296,8 +293,10 @@
                                 <span class="material-icons-round">table_rows</span>
                             </div>
                             <div class="status-summary-body">
-                                <span class="status-summary-count" id="summaryTotal">0 kelas</span>
-                                <span class="status-summary-label">Total Kelas</span>
+                                <div class="status-summary-top">
+                                    <span class="status-summary-count" id="summaryTotal">0</span>
+                                    <span class="status-summary-label">Total Kelas</span>
+                                </div>
                                 <span class="status-summary-threshold">Dari filter aktif</span>
                             </div>
                         </div>
@@ -314,7 +313,7 @@
                         <div class="table-controls">
                             <div class="search-box">
                                 <span class="material-icons-round">search</span>
-                                <input type="text" id="tableSearch" placeholder="Cari unit atau kelas...">
+                                <input type="text" id="tableSearch" placeholder="Cari sekolah atau kelas...">
                             </div>
                             <div class="table-actions">
                                 <button id="btnExport" class="btn btn-outline">
@@ -327,7 +326,7 @@
                             <table id="drilldownTable" class="custom-table">
                                 <thead id="drilldownHeader">
                                     <tr>
-                                        <th data-sort="org">Unit <span class="material-icons-round sort-icon">unfold_more</span></th>
+                                        <th data-sort="org">Sekolah (Kode) <span class="material-icons-round sort-icon">unfold_more</span></th>
                                         <th data-sort="kelas">Kelas <span class="material-icons-round sort-icon">unfold_more</span></th>
                                         <th data-sort="jenjang">Jenjang <span class="material-icons-round sort-icon">unfold_more</span></th>
                                         <th data-sort="lanjut">Jumlah Lanjut <span class="material-icons-round sort-icon">unfold_more</span></th>
@@ -358,6 +357,6 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <script src="script.js?v=18"></script>
+    <script src="script.js?v=31"></script>
 </body>
 </html>

@@ -449,8 +449,23 @@ function destroyChart(id) {
 function renderCharts(filtered = getFilteredRecords()) {
     if(!state.metadata) return;
     
-    const aggPeriod = aggregateByPeriod(filtered);
-    const labels = state.metadata.periods;
+    // For trend charts over time, filter by jenjang and organization only so non-selected periods don't drop to 0
+    const trendRecords = state.records.filter(r => {
+        const mJenjang = state.filters.jenjang === 'all' || r.jenjang === state.filters.jenjang;
+        const mOrg = state.filters.organization === 'all' || r.organization_code === state.filters.organization;
+        return mJenjang && mOrg;
+    });
+
+    const aggPeriod = aggregateByPeriod(trendRecords);
+    let labels = state.metadata.periods;
+    if (state.filters.period !== 'all') {
+        const idx = state.metadata.periods.indexOf(state.filters.period);
+        if (idx > 0) {
+            labels = [state.metadata.periods[idx - 1], state.metadata.periods[idx]];
+        } else if (idx === 0) {
+            labels = ['2020/2021', state.metadata.periods[0]];
+        }
+    }
     const dataLanjut = labels.map(p => aggPeriod[p] ? aggPeriod[p].lanjut : 0);
     const dataKeluar = labels.map(p => aggPeriod[p] ? aggPeriod[p].keluar : 0);
 
@@ -468,10 +483,13 @@ function renderCharts(filtered = getFilteredRecords()) {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 2. Overview Donut
+    // 2. Overview Donut (use filtered so Donut reflects current period selection)
     destroyChart('overviewDonutChart');
-    const totL = dataLanjut.reduce((a,b)=>a+b,0);
-    const totK = dataKeluar.reduce((a,b)=>a+b,0);
+    let totL = 0, totK = 0;
+    filtered.forEach(r => {
+        if (r.type === 'lanjut') totL += r.jumlah_siswa;
+        else if (r.type === 'keluar') totK += r.jumlah_siswa;
+    });
     state.charts['overviewDonutChart'] = new Chart(document.getElementById('overviewDonutChart'), {
         type: 'doughnut',
         plugins: [ChartDataLabels],
@@ -502,8 +520,8 @@ function renderCharts(filtered = getFilteredRecords()) {
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
-    // 4 & 5. Jenjang charts
-    const aggJenjang = aggregateByJenjang(filtered, labels);
+    // 4 & 5. Jenjang charts (use trendRecords)
+    const aggJenjang = aggregateByJenjang(trendRecords, labels);
     
     destroyChart('keluarJenjangChart');
     state.charts['keluarJenjangChart'] = new Chart(document.getElementById('keluarJenjangChart'), {
@@ -675,6 +693,21 @@ function renderTable() {
     
     els.table.info.textContent = `Menampilkan ${filtered.length > 0 ? start + 1 : 0} - ${Math.min(start + state.tableRowsPerPage, filtered.length)} dari ${filtered.length} data`;
     els.table.pageIndicator.textContent = `Halaman ${state.tablePage} dari ${maxPage}`;
+
+    els.table.headers.forEach(th => {
+        const icon = th.querySelector('.sort-icon');
+        if (icon) {
+            if (th.dataset.sort === state.tableSort.col) {
+                icon.textContent = state.tableSort.asc ? 'arrow_upward' : 'arrow_downward';
+                icon.style.opacity = '1';
+                icon.style.color = 'var(--green-primary)';
+            } else {
+                icon.textContent = 'unfold_more';
+                icon.style.opacity = '';
+                icon.style.color = '';
+            }
+        }
+    });
 }
 
 function exportToCSV() {

@@ -1053,13 +1053,25 @@ body {
 
 /* ===== Detail Sekolah Drill-Down Styles ===== */
 
-/* Navigation Bar (Back + Breadcrumb) */
+/* Navigation Bar (Back + Breadcrumb) - Sticky Header */
 .detail-nav-bar {
     display: flex;
     align-items: center;
     gap: 16px;
     margin-bottom: 24px;
-    padding: 12px 0;
+    padding: 16px 40px;
+    margin-left: -40px;
+    margin-right: -40px;
+    margin-top: -40px;
+    position: sticky;
+    top: var(--topbar-height);
+    z-index: 85;
+    background: rgba(248, 250, 252, 0.94);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
 }
 
 .detail-back-btn {

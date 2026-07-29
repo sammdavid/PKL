@@ -100,7 +100,10 @@ let state = {
     tablePage: 1,
     tableRowsPerPage: 15,
     tableSearch: '',
-    thresholds: { tinggi: 100, rendah: 0, mean: 0, sd: 0 } // computed dynamically
+    thresholds: { tinggi: 100, rendah: 0, mean: 0, sd: 0 }, // computed dynamically
+    detailLevel: 0,
+    selectedJenjang: null,
+    selectedOrg: null
 };
 
 // DOM Elements
@@ -187,12 +190,20 @@ function setupEventListeners() {
             const target = document.getElementById(item.dataset.target);
             if (target) target.classList.add('active');
             
+            // Reset detail drill-down when navigating to Detail Sekolah
+            if (item.dataset.target === 'section-details') {
+                state.detailLevel = 0;
+                state.selectedJenjang = null;
+                state.selectedOrg = null;
+                navigateDetail(0);
+            }
+            
             // Update title
             const titles = {
                 'section-overview': {t: 'Overview', s: 'Ringkasan transisi dan retensi siswa'},
                 'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
                 'section-survey': {t: 'Analisis Survei', s: 'Data alasan siswa lanjut dan keluar'},
-                'section-details': {t: 'Detail Data', s: 'Data detail per sekolah dan kelas'}
+                'section-details': {t: 'Detail Sekolah', s: 'Navigasi detail per jenjang, sekolah, dan kelas'}
             };
             document.getElementById('pageTitle').textContent = titles[item.dataset.target].t;
             document.getElementById('pageSubtitle').textContent = titles[item.dataset.target].s;
@@ -265,6 +276,9 @@ function setupEventListeners() {
         state.filters.organization = 'all';
         state.tableSearch = '';
         state.tablePage = 1;
+        state.detailLevel = 0;
+        state.selectedJenjang = null;
+        state.selectedOrg = null;
         state.tableSort = { col: 'org', asc: true };
         if (els.table.search) els.table.search.value = '';
         
@@ -276,6 +290,7 @@ function setupEventListeners() {
         
         populateFilters();
         updateDashboard();
+        navigateDetail(0);
         showToast('Semua filter & sorting dikembalikan ke default', 'success');
     }
 
@@ -297,8 +312,11 @@ function setupEventListeners() {
         const maxPage = Math.ceil(state.tableData.length / state.tableRowsPerPage);
         if (state.tablePage < maxPage) { state.tablePage++; renderTable(); }
     });
-    els.table.headers.forEach(th => {
-        th.addEventListener('click', () => {
+    const drilldownHeader = document.getElementById('drilldownHeader');
+    if (drilldownHeader) {
+        drilldownHeader.addEventListener('click', (e) => {
+            const th = e.target.closest('th[data-sort]');
+            if (!th) return;
             const col = th.dataset.sort;
             if (state.tableSort.col === col) {
                 state.tableSort.asc = !state.tableSort.asc;
@@ -309,7 +327,7 @@ function setupEventListeners() {
             sortData();
             renderTable();
         });
-    });
+    }
     els.table.export.addEventListener('click', exportToCSV);
 }
 
@@ -360,16 +378,605 @@ function updateOrgFilter() {
     updateDropdownOptions('filterGroupOrg', orgOpts);
 }
 
+// ========== Detail Sekolah Drill-Down ==========
+
+function navigateDetail(level, jenjang, org) {
+    state.detailLevel = level;
+    if (jenjang !== undefined) state.selectedJenjang = jenjang;
+    if (org !== undefined) state.selectedOrg = org;
+    
+    // Show/hide levels
+    document.querySelectorAll('.detail-level').forEach(el => el.classList.remove('active'));
+    const activeLevel = document.getElementById('detailLevel' + level);
+    if (activeLevel) activeLevel.classList.add('active');
+    
+    // Show/hide nav bar
+    const navBar = document.getElementById('detailNavBar');
+    if (navBar) navBar.style.display = level === 0 ? 'none' : 'flex';
+    
+    // Update breadcrumb
+    updateDetailBreadcrumb();
+    
+    // Render appropriate level
+    const filtered = getFilteredRecords();
+    if (level === 0) {
+        renderDetailLevel0(filtered);
+    } else if (level === 1) {
+        renderDetailLevel1(filtered);
+    } else if (level === 2) {
+        renderDetailLevel2(filtered);
+    }
+}
+
+function updateDetailBreadcrumb() {
+    const bc = document.getElementById('detailBreadcrumb');
+    if (!bc) return;
+    
+    let html = '<span class="detail-breadcrumb-item" onclick="navigateDetail(0)">Detail Sekolah</span>';
+    
+    if (state.detailLevel >= 1 && state.selectedJenjang) {
+        html += '<span class="detail-breadcrumb-sep material-icons-round">chevron_right</span>';
+        if (state.detailLevel === 1) {
+            html += `<span class="detail-breadcrumb-item active">${state.selectedJenjang}</span>`;
+        } else {
+            html += `<span class="detail-breadcrumb-item" onclick="navigateDetail(1, '${state.selectedJenjang}')">${state.selectedJenjang}</span>`;
+        }
+    }
+    
+    if (state.detailLevel >= 2 && state.selectedOrg) {
+        html += '<span class="detail-breadcrumb-sep material-icons-round">chevron_right</span>';
+        const orgName = getOrgName(state.selectedOrg);
+        html += `<span class="detail-breadcrumb-item active">${orgName} [${state.selectedOrg}]</span>`;
+    }
+    
+    bc.innerHTML = html;
+    
+    // Setup back button
+    const backBtn = document.getElementById('detailBackBtn');
+    if (backBtn) {
+        backBtn.onclick = () => {
+            if (state.detailLevel === 2) {
+                navigateDetail(1, state.selectedJenjang);
+            } else if (state.detailLevel === 1) {
+                navigateDetail(0);
+            }
+        };
+    }
+}
+
+function getJenjangStats(records) {
+    const jenjangList = ['TK', 'SD', 'SMP'];
+    const stats = {};
+    
+    jenjangList.forEach(j => {
+        const jRecords = records.filter(r => r.jenjang === j);
+        let lanjut = 0, keluar = 0;
+        const orgSet = new Set();
+        const classSet = new Set();
+        
+        jRecords.forEach(r => {
+            if (r.type === 'lanjut') lanjut += r.jumlah_siswa;
+            else if (r.type === 'keluar') keluar += r.jumlah_siswa;
+            orgSet.add(r.organization_code);
+            classSet.add(r.organization_code + '_' + r.classroom_code);
+        });
+        
+        const total = lanjut + keluar;
+        stats[j] = {
+            lanjut,
+            keluar,
+            total,
+            retention: total > 0 ? (lanjut / total * 100) : 0,
+            orgCount: orgSet.size,
+            classCount: classSet.size
+        };
+    });
+    
+    return stats;
+}
+
+function getOrgStats(records, jenjang) {
+    const orgRecords = records.filter(r => r.jenjang === jenjang);
+    const orgMap = {};
+    
+    orgRecords.forEach(r => {
+        if (!orgMap[r.organization_code]) {
+            orgMap[r.organization_code] = { lanjut: 0, keluar: 0, classes: new Set() };
+        }
+        orgMap[r.organization_code].classes.add(r.classroom_code);
+        if (r.type === 'lanjut') orgMap[r.organization_code].lanjut += r.jumlah_siswa;
+        else if (r.type === 'keluar') orgMap[r.organization_code].keluar += r.jumlah_siswa;
+    });
+    
+    return Object.entries(orgMap).map(([code, data]) => {
+        const total = data.lanjut + data.keluar;
+        return {
+            code,
+            name: getOrgName(code),
+            lanjut: data.lanjut,
+            keluar: data.keluar,
+            total,
+            retention: total > 0 ? (data.lanjut / total * 100) : 0,
+            classCount: data.classes.size
+        };
+    }).sort((a, b) => a.code.localeCompare(b.code));
+}
+
+function getYearlyStats(records) {
+    const periods = state.metadata ? state.metadata.periods : [];
+    const yearly = {};
+    
+    records.forEach(r => {
+        if (!yearly[r.period_code]) yearly[r.period_code] = { lanjut: 0, keluar: 0 };
+        if (r.type === 'lanjut') yearly[r.period_code].lanjut += r.jumlah_siswa;
+        else if (r.type === 'keluar') yearly[r.period_code].keluar += r.jumlah_siswa;
+    });
+    
+    return periods.filter(p => yearly[p]).map(p => {
+        const d = yearly[p];
+        const total = d.lanjut + d.keluar;
+        return {
+            period: p,
+            lanjut: d.lanjut,
+            keluar: d.keluar,
+            total,
+            retention: total > 0 ? (d.lanjut / total * 100) : 0
+        };
+    });
+}
+
+function renderDetailLevel0(filtered) {
+    const stats = getJenjangStats(filtered);
+    const grid = document.getElementById('jenjangCardGrid');
+    if (!grid) return;
+    
+    const icons = { TK: 'child_care', SD: 'menu_book', SMP: 'school' };
+    const labels = { TK: 'Taman Kanak-Kanak', SD: 'Sekolah Dasar', SMP: 'Sekolah Menengah Pertama' };
+    
+    let html = '';
+    ['TK', 'SD', 'SMP'].forEach(j => {
+        const s = stats[j];
+        
+        const yearlyData = getYearlyStats(filtered.filter(r => r.jenjang === j));
+        let yearlyHtml = '';
+        if (yearlyData.length > 1) {
+            yearlyHtml = `<div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border-color);">
+                <div style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Per Tahun Ajaran</div>`;
+            yearlyData.forEach(y => {
+                yearlyHtml += `<div class="jenjang-stat-row" style="margin-bottom: 4px;">
+                    <span class="jenjang-stat-label" style="font-size: 12px;">${y.period}</span>
+                    <span class="jenjang-stat-value" style="font-size: 13px;">${y.retention.toFixed(1)}%</span>
+                </div>`;
+            });
+            yearlyHtml += `</div>`;
+        }
+        html += `
+        <div class="jenjang-card" onclick="navigateDetail(1, '${j}')">
+            <div class="jenjang-card-header">
+                <div class="jenjang-card-title">${j}</div>
+                <div class="jenjang-card-icon">
+                    <span class="material-icons-round">${icons[j]}</span>
+                </div>
+            </div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; font-weight: 500;">${labels[j]}</div>
+            <div class="jenjang-card-stats">
+                <div class="jenjang-stat-row">
+                    <span class="jenjang-stat-label">Cabang Sekolah</span>
+                    <span class="jenjang-stat-value">${s.orgCount} sekolah</span>
+                </div>
+                <div class="jenjang-stat-row">
+                    <span class="jenjang-stat-label">Total Kelas</span>
+                    <span class="jenjang-stat-value">${s.classCount} kelas</span>
+                </div>
+                <div class="jenjang-stat-row">
+                    <span class="jenjang-stat-label">Siswa Lanjut</span>
+                    <span class="jenjang-stat-value" style="color: var(--green-dark);">${s.lanjut.toLocaleString()}</span>
+                </div>
+                <div class="jenjang-stat-row">
+                    <span class="jenjang-stat-label">Siswa Keluar</span>
+                    <span class="jenjang-stat-value" style="color: var(--yellow-dark);">${s.keluar.toLocaleString()}</span>
+                </div>
+                <div class="jenjang-stat-row">
+                    <span class="jenjang-stat-label">Retention Rate</span>
+                    <span class="jenjang-stat-value" style="font-size: 18px; font-weight: 700;">${s.retention.toFixed(1)}%</span>
+                </div>
+            </div>
+            ${yearlyHtml}
+            <div class="jenjang-retention-bar">
+                <div class="jenjang-retention-fill" style="width: ${s.retention}%;"></div>
+            </div>
+            <div class="jenjang-card-footer">
+                <span>Lihat detail</span>
+                <span class="material-icons-round">arrow_forward</span>
+            </div>
+        </div>`;
+    });
+    
+    grid.innerHTML = html;
+}
+
+function renderDetailLevel1(filtered) {
+    const orgStats = getOrgStats(filtered, state.selectedJenjang);
+    const grid = document.getElementById('schoolCardGrid');
+    if (!grid) return;
+    
+    // Compute thresholds for org-level retention
+    const orgRetentions = orgStats.map(o => ({ retention: o.retention }));
+    const orgThresholds = computeThresholds(orgRetentions);
+    
+    let html = '';
+    orgStats.forEach(o => {
+        const orgYearly = getYearlyStats(filtered.filter(r => r.jenjang === state.selectedJenjang && r.organization_code === o.code));
+        let yearlyMiniHtml = '';
+        if (orgYearly.length > 1) {
+            yearlyMiniHtml = `<div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 4px;">`;
+            orgYearly.forEach(y => {
+                const shortYear = y.period.split('/')[0].slice(-2) + '/' + y.period.split('/')[1].slice(-2);
+                yearlyMiniHtml += `<span style="font-size: 11px; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.04); color: var(--text-secondary);">${shortYear}: ${y.retention.toFixed(0)}%</span>`;
+            });
+            yearlyMiniHtml += `</div>`;
+        }
+
+        let statusLabel, badgeClass;
+        if (o.retention >= orgThresholds.tinggi) {
+            statusLabel = 'Tinggi'; badgeClass = 'badge-tinggi';
+        } else if (o.retention >= orgThresholds.rendah) {
+            statusLabel = 'Sedang'; badgeClass = 'badge-sedang';
+        } else {
+            statusLabel = 'Rendah'; badgeClass = 'badge-rendah';
+        }
+        
+        html += `
+        <div class="school-card" onclick="navigateDetail(2, '${state.selectedJenjang}', '${o.code}')">
+            <div class="school-card-header">
+                <div class="school-card-name">${o.name}</div>
+                <span class="school-card-code">${o.code}</span>
+            </div>
+            <div class="school-card-retention">${o.retention.toFixed(1)}%</div>
+            ${yearlyMiniHtml}
+            <div class="school-card-meta">
+                <span class="school-card-classes">${o.classCount} kelas &middot; ${o.total.toLocaleString()} siswa</span>
+                <span class="${badgeClass}">${statusLabel}</span>
+            </div>
+            <div class="school-card-footer">
+                <span class="school-card-detail-link">
+                    <span>Lihat kelas</span>
+                    <span class="material-icons-round">arrow_forward</span>
+                </span>
+            </div>
+        </div>`;
+    });
+    
+    grid.innerHTML = html;
+    
+    // Render comparison chart
+    renderSchoolComparisonChart(orgStats, orgThresholds);
+    
+    // Render yearly trend chart
+    renderJenjangYearlyTrend(filtered, state.selectedJenjang);
+}
+
+function renderSchoolComparisonChart(orgStats, thresholds) {
+    destroyChart('schoolComparisonChart');
+    const canvas = document.getElementById('schoolComparisonChart');
+    if (!canvas) return;
+    
+    const labels = orgStats.map(o => o.code);
+    const data = orgStats.map(o => o.retention.toFixed(1));
+    const colors = orgStats.map(o => {
+        if (o.retention >= thresholds.tinggi) return 'rgba(2, 197, 190, 0.8)';
+        if (o.retention >= thresholds.rendah) return 'rgba(71, 85, 105, 0.6)';
+        return 'rgba(255, 152, 0, 0.8)';
+    });
+    
+    state.charts['schoolComparisonChart'] = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Retention Rate (%)',
+                data,
+                backgroundColor: colors,
+                borderRadius: 8,
+                maxBarThickness: 48
+            }]
+        },
+        options: {
+            responsive: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    formatter: v => v + '%',
+                    font: { weight: 600, size: 12 },
+                    color: '#1e293b'
+                }
+            },
+            scales: {
+                x: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+                y: { grid: { display: false } }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+function renderJenjangYearlyTrend(records, jenjang) {
+    destroyChart('jenjangYearlyTrendChart');
+    const canvas = document.getElementById('jenjangYearlyTrendChart');
+    if (!canvas) return;
+    
+    const jRecords = records.filter(r => r.jenjang === jenjang);
+    const yearlyData = getYearlyStats(jRecords);
+    if (yearlyData.length < 2) {
+        canvas.parentElement.style.display = 'none';
+        return;
+    }
+    canvas.parentElement.style.display = '';
+    
+    state.charts['jenjangYearlyTrendChart'] = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: yearlyData.map(y => y.period),
+            datasets: [{
+                label: 'Retention Rate (%)',
+                data: yearlyData.map(y => y.retention.toFixed(1)),
+                borderColor: 'rgba(2, 197, 190, 1)',
+                backgroundColor: 'rgba(2, 197, 190, 0.1)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 6,
+                pointBackgroundColor: 'rgba(2, 197, 190, 1)',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: v => v + '%',
+                    font: { weight: 600, size: 12 },
+                    color: '#1e293b'
+                }
+            },
+            scales: {
+                y: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+                x: { grid: { display: false } }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+function renderDetailLevel2(filtered) {
+    const orgRecords = filtered.filter(r => r.jenjang === state.selectedJenjang && r.organization_code === state.selectedOrg);
+    
+    // School info header
+    const header = document.getElementById('schoolInfoHeader');
+    if (header) {
+        const orgName = getOrgName(state.selectedOrg);
+        let totalLanjut = 0, totalKeluar = 0;
+        orgRecords.forEach(r => {
+            if (r.type === 'lanjut') totalLanjut += r.jumlah_siswa;
+            else if (r.type === 'keluar') totalKeluar += r.jumlah_siswa;
+        });
+        const totalAll = totalLanjut + totalKeluar;
+        const overallRetention = totalAll > 0 ? (totalLanjut / totalAll * 100) : 0;
+        
+        header.innerHTML = `
+            <div class="school-info-left">
+                <div class="school-info-icon">
+                    <span class="material-icons-round">account_balance</span>
+                </div>
+                <div>
+                    <div class="school-info-name">${orgName}</div>
+                    <div class="school-info-code">${state.selectedOrg} &middot; ${state.selectedJenjang} &middot; ${totalAll.toLocaleString()} siswa</div>
+                </div>
+            </div>
+            <div class="school-info-right">
+                <div class="school-info-retention">${overallRetention.toFixed(1)}%</div>
+                <div class="school-info-retention-label">Retention Rate</div>
+            </div>`;
+    }
+    
+    // Use existing table logic for class-level data
+    state.tableData = getClassroomDrilldown(orgRecords);
+    state.tableSort = { col: 'kelas', asc: true };
+    state.tablePage = 1;
+    state.tableSearch = '';
+    const searchInput = document.getElementById('tableSearch');
+    if (searchInput) searchInput.value = '';
+    
+    sortData();
+    updateStatusSummary(state.tableData);
+    renderTable();
+    
+    // Render class-level charts
+    renderClassCharts(state.tableData);
+    
+    // Render yearly trend for this school
+    renderSchoolYearlyTrend(filtered);
+}
+
+function renderClassCharts(tableData) {
+    // 1. Retention Rate per Kelas (horizontal bar)
+    destroyChart('classRetentionChart');
+    const canvas1 = document.getElementById('classRetentionChart');
+    if (canvas1 && tableData.length > 0) {
+        const sorted = [...tableData].sort((a, b) => b.retention - a.retention);
+        const labels = sorted.map(d => d.kelas);
+        const data = sorted.map(d => d.retention.toFixed(1));
+        const colors = sorted.map(d => {
+            const s = getStatusLabel(d.retention);
+            if (s === 'tinggi') return 'rgba(2, 197, 190, 0.8)';
+            if (s === 'sedang') return 'rgba(71, 85, 105, 0.6)';
+            return 'rgba(255, 152, 0, 0.8)';
+        });
+        
+        state.charts['classRetentionChart'] = new Chart(canvas1, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{ label: 'Retention Rate (%)', data, backgroundColor: colors, borderRadius: 6, maxBarThickness: 36 }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: {
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end', align: 'end',
+                        formatter: v => v + '%',
+                        font: { weight: 600, size: 11 },
+                        color: '#1e293b'
+                    }
+                },
+                scales: {
+                    x: { min: 0, max: 100, ticks: { callback: v => v + '%' } },
+                    y: { grid: { display: false } }
+                }
+            },
+            plugins: [ChartDataLabels]
+        });
+    }
+    
+    // 2. Distribution chart (Lanjut vs Keluar per class - stacked bar)
+    destroyChart('classDistributionChart');
+    const canvas2 = document.getElementById('classDistributionChart');
+    if (canvas2 && tableData.length > 0) {
+        const sorted = [...tableData].sort((a, b) => a.kelas.localeCompare(b.kelas));
+        state.charts['classDistributionChart'] = new Chart(canvas2, {
+            type: 'bar',
+            data: {
+                labels: sorted.map(d => d.kelas),
+                datasets: [
+                    {
+                        label: 'Lanjut',
+                        data: sorted.map(d => d.lanjut),
+                        backgroundColor: 'rgba(2, 197, 190, 0.7)',
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Keluar',
+                        data: sorted.map(d => d.keluar),
+                        backgroundColor: 'rgba(255, 152, 0, 0.7)',
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    datalabels: { display: false }
+                },
+                scales: {
+                    x: { stacked: true, grid: { display: false } },
+                    y: { stacked: true, beginAtZero: true }
+                }
+            }
+        });
+    }
+}
+
+function renderSchoolYearlyTrend(allRecords) {
+    destroyChart('schoolYearlyTrendChart');
+    const canvas = document.getElementById('schoolYearlyTrendChart');
+    if (!canvas) return;
+    
+    // Get ALL records for this school (not just filtered by period) to show full trend
+    const schoolRecords = state.records.filter(r => 
+        r.jenjang === state.selectedJenjang && r.organization_code === state.selectedOrg
+    );
+    const yearlyData = getYearlyStats(schoolRecords);
+    
+    if (yearlyData.length < 2) {
+        canvas.parentElement.style.display = 'none';
+        return;
+    }
+    canvas.parentElement.style.display = '';
+    
+    state.charts['schoolYearlyTrendChart'] = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: yearlyData.map(y => y.period),
+            datasets: [
+                {
+                    label: 'Retention Rate (%)',
+                    data: yearlyData.map(y => y.retention.toFixed(1)),
+                    borderColor: 'rgba(2, 197, 190, 1)',
+                    backgroundColor: 'rgba(2, 197, 190, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 6,
+                    pointBackgroundColor: 'rgba(2, 197, 190, 1)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    borderWidth: 3,
+                    yAxisID: 'y'
+                },
+                {
+                    label: 'Siswa Lanjut',
+                    data: yearlyData.map(y => y.lanjut),
+                    borderColor: 'rgba(2, 197, 190, 0.5)',
+                    backgroundColor: 'rgba(2, 197, 190, 0.3)',
+                    type: 'bar',
+                    borderRadius: 4,
+                    yAxisID: 'y1'
+                },
+                {
+                    label: 'Siswa Keluar',
+                    data: yearlyData.map(y => y.keluar),
+                    borderColor: 'rgba(255, 152, 0, 0.5)',
+                    backgroundColor: 'rgba(255, 152, 0, 0.3)',
+                    type: 'bar',
+                    borderRadius: 4,
+                    yAxisID: 'y1'
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { position: 'top' },
+                datalabels: { display: false }
+            },
+            scales: {
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    min: 0, max: 100,
+                    ticks: { callback: v => v + '%' },
+                    title: { display: true, text: 'Retention Rate' }
+                },
+                y1: {
+                    type: 'linear',
+                    position: 'right',
+                    beginAtZero: true,
+                    grid: { drawOnChartArea: false },
+                    title: { display: true, text: 'Jumlah Siswa' }
+                },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+}
+
 function updateDashboard() {
     const filtered = getFilteredRecords();
     updateKPIs(filtered);
     renderCharts(filtered);
     
-    // Prepare table data
-    state.tableData = getClassroomDrilldown(filtered);
-    sortData();
-    updateStatusSummary(state.tableData);
-    renderTable();
+    // Detail Sekolah drill-down rendering based on current level
+    navigateDetail(state.detailLevel, state.selectedJenjang, state.selectedOrg);
 }
 
 function updateStatusSummary(tableData) {
@@ -805,8 +1412,6 @@ function renderTable() {
     
     if (state.tableSearch) {
         filtered = filtered.filter(row => 
-            row.org.toLowerCase().includes(state.tableSearch) || 
-            getOrgName(row.org).toLowerCase().includes(state.tableSearch) || 
             row.kelas.toLowerCase().includes(state.tableSearch)
         );
     }
@@ -823,16 +1428,9 @@ function renderTable() {
         const badgeLabel = statusKey === 'tinggi' ? 'Tinggi' : statusKey === 'sedang' ? 'Sedang' : 'Rendah';
         const badge = `<span class="${badgeClass}">${badgeLabel}</span>`;
         
-        const orgName = getOrgName(row.org);
-        const orgDisplay = (orgName !== row.org)
-            ? `<div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;"><span style="font-weight: 600; color: var(--text-primary); white-space: nowrap;">${orgName}</span><span style="font-size: 11px; padding: 2px 7px; border-radius: 6px; background: rgba(0,0,0,0.06); color: var(--text-secondary); font-weight: 600; border: 1px solid rgba(0,0,0,0.08); white-space: nowrap;">${row.org}</span></div>`
-            : `<span style="font-weight: 600; color: var(--text-primary); white-space: nowrap;">${row.org}</span>`;
-        
         html += `
             <tr>
-                <td>${orgDisplay}</td>
-                <td>${row.kelas}</td>
-                <td>${row.jenjang}</td>
+                <td style="font-weight: 600; padding-left: 48px;">${row.kelas}</td>
                 <td>${row.lanjut}</td>
                 <td>${row.keluar}</td>
                 <td style="font-weight: 600">${row.retention.toFixed(1)}%</td>
@@ -842,7 +1440,7 @@ function renderTable() {
     });
     
     if (paginated.length === 0) {
-        html = `<tr><td colspan="7" style="text-align:center; padding:32px; color:var(--text-muted)">Tidak ada data ditemukan</td></tr>`;
+        html = `<tr><td colspan="5" style="text-align:center; padding:32px; color:var(--text-muted)">Tidak ada data ditemukan</td></tr>`;
     }
     
     els.table.body.innerHTML = html;
@@ -850,7 +1448,7 @@ function renderTable() {
     els.table.info.textContent = `Menampilkan ${filtered.length > 0 ? start + 1 : 0} - ${Math.min(start + state.tableRowsPerPage, filtered.length)} dari ${filtered.length} data`;
     els.table.pageIndicator.textContent = `Halaman ${state.tablePage} dari ${maxPage}`;
 
-    els.table.headers.forEach(th => {
+    document.querySelectorAll('#drilldownHeader th[data-sort]').forEach(th => {
         const icon = th.querySelector('.sort-icon');
         if (icon) {
             if (th.dataset.sort === state.tableSort.col) {
@@ -869,16 +1467,17 @@ function renderTable() {
 function exportToCSV() {
     if (state.tableData.length === 0) return;
     
-    const headers = ['Kode Sekolah', 'Nama Sekolah', 'Kelas', 'Jenjang', 'Jumlah Lanjut', 'Jumlah Keluar', 'Retention Rate'];
+    const orgName = getOrgName(state.selectedOrg);
+    const headers = ['Kelas', 'Jumlah Lanjut', 'Jumlah Keluar', 'Retention Rate'];
     const rows = state.tableData.map(r => 
-        [r.org, `"${getOrgName(r.org)}"`, r.kelas, r.jenjang, r.lanjut, r.keluar, r.retention.toFixed(1) + '%'].join(',')
+        [r.kelas, r.lanjut, r.keluar, r.retention.toFixed(1) + '%'].join(',')
     );
     
     const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'detail_transisi.csv';
+    link.download = `detail_${state.selectedOrg || 'all'}_${orgName}.csv`;
     link.click();
 }
 

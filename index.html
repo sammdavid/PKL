@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Material Icons Round -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -47,8 +47,8 @@
                         <span>Analisis Survei</span>
                     </li>
                     <li class="nav-item" data-target="section-details">
-                        <span class="material-icons-round">table_chart</span>
-                        <span>Detail Data</span>
+                        <span class="material-icons-round">school</span>
+                        <span>Detail Sekolah</span>
                     </li>
                 </ul>
             </nav>
@@ -247,105 +247,159 @@
                     </div>
                 </section>
 
-                <!-- Detail Data Section -->
+                <!-- Detail Sekolah Section (Drill-Down) -->
                 <section id="section-details" class="dashboard-section">
 
-                    <!-- Status Summary Cards -->
-                    <div class="status-summary-grid">
-                        <div class="status-summary-card card-tinggi">
-                            <div class="status-summary-icon">
-                                <span class="material-icons-round">verified</span>
-                            </div>
-                            <div class="status-summary-body">
-                                <div class="status-summary-top">
-                                    <span class="status-summary-count" id="summaryTinggi">0</span>
-                                    <span class="status-summary-label">Kelas Tinggi</span>
-                                </div>
-                                <span class="status-summary-threshold" id="thresholdTinggi">Menghitung...</span>
-                            </div>
-                        </div>
-                        <div class="status-summary-card card-sedang">
-                            <div class="status-summary-icon">
-                                <span class="material-icons-round">trending_flat</span>
-                            </div>
-                            <div class="status-summary-body">
-                                <div class="status-summary-top">
-                                    <span class="status-summary-count" id="summarySedang">0</span>
-                                    <span class="status-summary-label">Kelas Sedang</span>
-                                </div>
-                                <span class="status-summary-threshold" id="thresholdSedang">Menghitung...</span>
-                            </div>
-                        </div>
-                        <div class="status-summary-card card-rendah">
-                            <div class="status-summary-icon">
-                                <span class="material-icons-round">trending_down</span>
-                            </div>
-                            <div class="status-summary-body">
-                                <div class="status-summary-top">
-                                    <span class="status-summary-count" id="summaryRendah">0</span>
-                                    <span class="status-summary-label">Kelas Rendah</span>
-                                </div>
-                                <span class="status-summary-threshold" id="thresholdRendah">Menghitung...</span>
-                            </div>
-                        </div>
-                        <div class="status-summary-card card-total">
-                            <div class="status-summary-icon">
-                                <span class="material-icons-round">table_rows</span>
-                            </div>
-                            <div class="status-summary-body">
-                                <div class="status-summary-top">
-                                    <span class="status-summary-count" id="summaryTotal">0</span>
-                                    <span class="status-summary-label">Total Kelas</span>
-                                </div>
-                                <span class="status-summary-threshold">Dari filter aktif</span>
-                            </div>
+                    <!-- Navigation Bar (Back + Breadcrumb) - hidden at Level 0 -->
+                    <div class="detail-nav-bar" id="detailNavBar" style="display: none;">
+                        <button class="detail-back-btn" id="detailBackBtn">
+                            <span class="material-icons-round">arrow_back</span>
+                            <span>Kembali</span>
+                        </button>
+                        <div class="detail-breadcrumb" id="detailBreadcrumb"></div>
+                    </div>
+
+                    <!-- Level 0: Jenjang Selection -->
+                    <div id="detailLevel0" class="detail-level active">
+                        <div class="jenjang-card-grid" id="jenjangCardGrid">
+                            <!-- Jenjang cards injected by JS -->
                         </div>
                     </div>
 
-                    <!-- Threshold Info Bar -->
-                    <div class="threshold-info-bar">
-                        <span class="material-icons-round" style="font-size:16px; color: var(--text-muted);">info_outline</span>
-                        <span id="thresholdInfo" style="color: var(--text-muted); font-size: 13px; font-weight: 500;">Menghitung threshold...</span>
-                        <span style="color: var(--text-muted); font-size: 13px;"> &mdash; Threshold dihitung dinamis dari data yang ditampilkan (Mean &plusmn; 0.5 SD)</span>
+                    <!-- Level 1: School/Branch Cards -->
+                    <div id="detailLevel1" class="detail-level">
+                        <div class="school-card-grid" id="schoolCardGrid">
+                            <!-- School cards injected by JS -->
+                        </div>
+                        <div class="detail-chart-card" style="margin-top: 24px;">
+                            <h3>Perbandingan Retention Rate antar Cabang</h3>
+                            <canvas id="schoolComparisonChart"></canvas>
+                        </div>
+                        <div class="detail-chart-card" style="margin-top: 24px;">
+                            <h3>Tren Retention Rate per Tahun Ajaran</h3>
+                            <canvas id="jenjangYearlyTrendChart"></canvas>
+                        </div>
                     </div>
 
-                    <div class="chart-card full-width data-table-card">
-                        <div class="table-controls">
-                            <div class="search-box">
-                                <span class="material-icons-round">search</span>
-                                <input type="text" id="tableSearch" placeholder="Cari sekolah atau kelas...">
+                    <!-- Level 2: Class Detail -->
+                    <div id="detailLevel2" class="detail-level">
+                        <!-- School Info Header -->
+                        <div class="school-info-header" id="schoolInfoHeader"></div>
+
+                        <!-- Status Summary Cards -->
+                        <div class="status-summary-grid">
+                            <div class="status-summary-card card-tinggi">
+                                <div class="status-summary-icon">
+                                    <span class="material-icons-round">verified</span>
+                                </div>
+                                <div class="status-summary-body">
+                                    <div class="status-summary-top">
+                                        <span class="status-summary-count" id="summaryTinggi">0</span>
+                                        <span class="status-summary-label">Kelas Tinggi</span>
+                                    </div>
+                                    <span class="status-summary-threshold" id="thresholdTinggi">Menghitung...</span>
+                                </div>
                             </div>
-                            <div class="table-actions">
-                                <button id="btnExport" class="btn btn-outline">
-                                    <span class="material-icons-round">download</span>
-                                    <span>Export CSV</span>
-                                </button>
+                            <div class="status-summary-card card-sedang">
+                                <div class="status-summary-icon">
+                                    <span class="material-icons-round">trending_flat</span>
+                                </div>
+                                <div class="status-summary-body">
+                                    <div class="status-summary-top">
+                                        <span class="status-summary-count" id="summarySedang">0</span>
+                                        <span class="status-summary-label">Kelas Sedang</span>
+                                    </div>
+                                    <span class="status-summary-threshold" id="thresholdSedang">Menghitung...</span>
+                                </div>
+                            </div>
+                            <div class="status-summary-card card-rendah">
+                                <div class="status-summary-icon">
+                                    <span class="material-icons-round">trending_down</span>
+                                </div>
+                                <div class="status-summary-body">
+                                    <div class="status-summary-top">
+                                        <span class="status-summary-count" id="summaryRendah">0</span>
+                                        <span class="status-summary-label">Kelas Rendah</span>
+                                    </div>
+                                    <span class="status-summary-threshold" id="thresholdRendah">Menghitung...</span>
+                                </div>
+                            </div>
+                            <div class="status-summary-card card-total">
+                                <div class="status-summary-icon">
+                                    <span class="material-icons-round">table_rows</span>
+                                </div>
+                                <div class="status-summary-body">
+                                    <div class="status-summary-top">
+                                        <span class="status-summary-count" id="summaryTotal">0</span>
+                                        <span class="status-summary-label">Total Kelas</span>
+                                    </div>
+                                    <span class="status-summary-threshold">Dari filter aktif</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table id="drilldownTable" class="custom-table">
-                                <thead id="drilldownHeader">
-                                    <tr>
-                                        <th data-sort="org">Sekolah (Kode) <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th data-sort="kelas">Kelas <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th data-sort="jenjang">Jenjang <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th data-sort="lanjut">Jumlah Lanjut <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th data-sort="keluar">Jumlah Keluar <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th data-sort="retention">Retention Rate <span class="material-icons-round sort-icon">unfold_more</span></th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="drilldownBody">
-                                    <!-- Table rows injected via JS -->
-                                </tbody>
-                            </table>
+
+                        <!-- Threshold Info Bar -->
+                        <div class="threshold-info-bar">
+                            <span class="material-icons-round" style="font-size:16px; color: var(--text-muted);">info_outline</span>
+                            <span id="thresholdInfo" style="color: var(--text-muted); font-size: 13px; font-weight: 500;">Menghitung threshold...</span>
+                            <span style="color: var(--text-muted); font-size: 13px;"> &mdash; Threshold dihitung dinamis dari data yang ditampilkan (Mean &plusmn; 0.5 SD)</span>
                         </div>
-                        <div class="table-footer">
-                            <div id="tableInfo" class="table-info">Menampilkan 0 dari 0 data</div>
-                            <div class="pagination">
-                                <button id="prevPage" class="icon-btn"><span class="material-icons-round">chevron_left</span></button>
-                                <span id="pageIndicator" class="page-indicator">Halaman 1</span>
-                                <button id="nextPage" class="icon-btn"><span class="material-icons-round">chevron_right</span></button>
+
+                        <!-- Yearly Trend -->
+                        <div class="detail-chart-card" style="margin-bottom: 24px;">
+                            <h3>Tren Retention Rate per Tahun Ajaran</h3>
+                            <canvas id="schoolYearlyTrendChart"></canvas>
+                        </div>
+
+                        <!-- Charts Row -->
+                        <div class="detail-chart-row">
+                            <div class="detail-chart-card">
+                                <h3>Retention Rate per Kelas</h3>
+                                <canvas id="classRetentionChart"></canvas>
+                            </div>
+                            <div class="detail-chart-card">
+                                <h3>Distribusi Siswa Lanjut vs Keluar</h3>
+                                <canvas id="classDistributionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Detail Table -->
+                        <div class="chart-card full-width data-table-card">
+                            <div class="table-controls">
+                                <div class="search-box">
+                                    <span class="material-icons-round">search</span>
+                                    <input type="text" id="tableSearch" placeholder="Cari kelas...">
+                                </div>
+                                <div class="table-actions">
+                                    <button id="btnExport" class="btn btn-outline">
+                                        <span class="material-icons-round">download</span>
+                                        <span>Export CSV</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table id="drilldownTable" class="custom-table">
+                                    <thead id="drilldownHeader">
+                                        <tr>
+                                            <th data-sort="kelas">Kelas <span class="material-icons-round sort-icon">unfold_more</span></th>
+                                            <th data-sort="lanjut">Jumlah Lanjut <span class="material-icons-round sort-icon">unfold_more</span></th>
+                                            <th data-sort="keluar">Jumlah Keluar <span class="material-icons-round sort-icon">unfold_more</span></th>
+                                            <th data-sort="retention">Retention Rate <span class="material-icons-round sort-icon">unfold_more</span></th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="drilldownBody">
+                                        <!-- Table rows injected via JS -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="table-footer">
+                                <div id="tableInfo" class="table-info">Menampilkan 0 dari 0 data</div>
+                                <div class="pagination">
+                                    <button id="prevPage" class="icon-btn"><span class="material-icons-round">chevron_left</span></button>
+                                    <span id="pageIndicator" class="page-indicator">Halaman 1</span>
+                                    <button id="nextPage" class="icon-btn"><span class="material-icons-round">chevron_right</span></button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -357,6 +411,6 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
-    <script src="script.js?v=31"></script>
+    <script src="script.js?v=33"></script>
 </body>
 </html>

@@ -164,10 +164,26 @@ async function loadData() {
             if (els.dataStatus) els.dataStatus.textContent = 'Data Source: Sample';
         }
 
-        if (surveyRes.status === 'fulfilled') {
-            state.survey = surveyRes.value;
-        } else {
-            state.survey = generateSampleSurveyData();
+        try {
+            const [alasanMendaftar, alasanKeluar, sumberInfo, kepuasanLayanan] = await Promise.all([
+                fetch('data/survey_data/alasan_mendaftar.json').then(r => r.json()),
+                fetch('data/survey_data/alasan_keluar.json').then(r => r.json()),
+                fetch('data/survey_data/sumber_info.json').then(r => r.json()),
+                fetch('data/survey_data/kepuasan_layanan.json').then(r => r.json())
+            ]);
+            state.survey = {
+                alasan_mendaftar: alasanMendaftar,
+                alasan_keluar: alasanKeluar,
+                sumber_info: sumberInfo,
+                kepuasan_layanan: kepuasanLayanan
+            };
+        } catch (surveyErr) {
+            console.warn('Gagal memuat survey_data JSON, mencoba fallback:', surveyErr);
+            if (surveyRes.status === 'fulfilled') {
+                state.survey = surveyRes.value;
+            } else {
+                state.survey = generateSampleSurveyData();
+            }
         }
     } catch (e) {
         generateSampleData();
@@ -328,7 +344,13 @@ function setupEventListeners() {
             renderTable();
         });
     }
-    els.table.export.addEventListener('click', exportToCSV);
+    if(els.table.export) els.table.export.addEventListener('click', exportToCSV);
+
+    const btnExportSurveyCSV = document.getElementById('btnExportSurveyCSV');
+    if (btnExportSurveyCSV) btnExportSurveyCSV.addEventListener('click', exportSurveyToCSV);
+
+    const btnExportSurveyExcel = document.getElementById('btnExportSurveyExcel');
+    if (btnExportSurveyExcel) btnExportSurveyExcel.addEventListener('click', exportSurveyToExcel);
 }
 
 function updateDropdownOptions(groupId, optionsArray) {
@@ -1307,33 +1329,285 @@ function renderCharts(filtered = getFilteredRecords()) {
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: false }, y: { stacked: false } } }
     });
 
-    // Survey Charts
+    // Survey Charts (Data Survei Aktual PSB)
     if(state.survey) {
         let sKey = state.filters.jenjang === 'all' ? 'ALL' : state.filters.jenjang;
-        if(!state.survey.alasan_keluar[sKey]) sKey = 'ALL';
         
-        const aK = (state.survey.alasan_keluar[sKey] || []).slice(0,7);
-        const aL = (state.survey.alasan_lanjut[sKey] || []).slice(0,7);
+        // Helper untuk merapikan dan menyingkat label Y agar tidak kepotong (dipecah jadi 2 baris bila perlu)
+        function formatChartLabel(text) {
+            if (!text) return '';
+            let cleaned = String(text)
+                .replace(/Media sosial \([^)]+\)/i, 'Media Sosial (IG, FB, YT, dll)')
+                .replace(/Mencari informasi sendiri \([^)]+\)/i, 'Mencari Info Sendiri (Telp/WA)')
+                .replace(/Informasi media cetak \([^)]+\)/i, 'Media Cetak (Koran/Majalah)')
+                .replace(/Informasi di media elektronik \([^)]+\)/i, 'Media Elektronik (Radio/TV)')
+                .replace(/^Sekolah berkelanjutan dari KB\/TK-Perguruan Tinggi Petra/i, 'Berkelanjutan KB/TK - PT Petra')
+                .replace(/^Sekolah memiliki sistem pembelajaran yang terus berinovasi/i, 'Sistem Pembelajaran Inovatif')
+                .replace(/^Sekolah memiliki pembinaan kerohanian kristiani yang baik/i, 'Pembinaan Kerohanian Kristiani')
+                .replace(/^Sekolah memiliki pendidikan character building/i, 'Pendidikan Character Building')
+                .replace(/^Lingkungan dan pergaulan yang kondusif/i, 'Lingkungan & Pergaulan Kondusif')
+                .replace(/^Sekolah memiliki /i, '')
+                .replace(/^Adanya /i, '')
+                .replace(/^Sekolah dengan /i, '')
+                .replace(/^Pelayanan sekolah dalam melayani /i, 'Pelayanan ')
+                .replace(/^Tutorial proses pendaftaran melalui /i, 'Tutorial Pendaftaran ')
+                .replace(/\(boleh lebih dari satu jawaban\)/i, '')
+                .trim();
+
+            if (cleaned.length > 30) {
+                const words = cleaned.split(' ');
+                if (words.length >= 3) {
+                    const mid = Math.ceil(words.length / 2);
+                    return [words.slice(0, mid).join(' '), words.slice(mid).join(' ')];
+                }
+                return cleaned.slice(0, 28) + '...';
+            }
+            return cleaned;
+        }
+
+        // Mendukung format JSON baru (array) ataupun format lama ber-key jenjang
+        let aK_raw = Array.isArray(state.survey.alasan_keluar) ? state.survey.alasan_keluar : (state.survey.alasan_keluar[sKey] || state.survey.alasan_keluar['ALL'] || []);
+        let aL_raw = Array.isArray(state.survey.alasan_mendaftar) ? state.survey.alasan_mendaftar : (state.survey.alasan_lanjut ? (Array.isArray(state.survey.alasan_lanjut) ? state.survey.alasan_lanjut : (state.survey.alasan_lanjut[sKey] || state.survey.alasan_lanjut['ALL'] || [])) : []);
+        
+        // Filter agar sentimen positif ('Tidak ada, semua sudah baik') tidak masuk ke Top Area Perbaikan (merah)
+        const aK = aK_raw.filter(d => {
+            const lbl = (d.label || d.alasan || '').toLowerCase();
+            return !lbl.includes('tidak ada') && !lbl.includes('semua sudah baik') && !lbl.includes('sudah bagus');
+        }).slice(0, 8);
+        
+        const aL = aL_raw.slice(0, 8);
 
         destroyChart('alasanKeluarChart');
-        state.charts['alasanKeluarChart'] = new Chart(document.getElementById('alasanKeluarChart'), {
-            type: 'bar',
-            data: {
-                labels: aK.map(d => d.alasan),
-                datasets: [{ label: 'Jumlah', data: aK.map(d => d.jumlah), backgroundColor: '#ff9800', borderRadius: 4 }]
-            },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+        const elKeluar = document.getElementById('alasanKeluarChart');
+        if (elKeluar && aK.length > 0) {
+            state.charts['alasanKeluarChart'] = new Chart(elKeluar, {
+                type: 'bar',
+                data: {
+                    labels: aK.map(d => formatChartLabel(d.label || d.alasan)),
+                    datasets: [{
+                        label: 'Jumlah Responden',
+                        data: aK.map(d => d.count || d.jumlah),
+                        backgroundColor: '#e53935', // Merah untuk area perbaikan / alasan keluar
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const item = aK[ctx.dataIndex];
+                                    const pct = item.percentage ? ` (${item.percentage}%)` : '';
+                                    return `Jumlah: ${ctx.raw} Responden${pct}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: { left: 4, right: 16 }
+                    }
+                }
+            });
+        }
 
         destroyChart('alasanLanjutChart');
-        state.charts['alasanLanjutChart'] = new Chart(document.getElementById('alasanLanjutChart'), {
-            type: 'bar',
-            data: {
-                labels: aL.map(d => d.alasan),
-                datasets: [{ label: 'Jumlah', data: aL.map(d => d.jumlah), backgroundColor: '#02C5BE', borderRadius: 6 }]
-            },
-            options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
-        });
+        const elLanjut = document.getElementById('alasanLanjutChart');
+        if (elLanjut && aL.length > 0) {
+            state.charts['alasanLanjutChart'] = new Chart(elLanjut, {
+                type: 'bar',
+                data: {
+                    labels: aL.map(d => formatChartLabel(d.label || d.alasan)),
+                    datasets: [{
+                        label: 'Jumlah Responden',
+                        data: aL.map(d => d.count || d.jumlah),
+                        backgroundColor: '#10b981', // Hijau untuk sentimen positif / alasan lanjut
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const item = aL[ctx.dataIndex];
+                                    const pct = item.percentage ? ` (${item.percentage}%)` : '';
+                                    return `Jumlah: ${ctx.raw} Responden${pct}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: { left: 4, right: 16 }
+                    }
+                }
+            });
+        }
+
+        // Sumber Informasi Chart
+        const sInfo_raw = Array.isArray(state.survey.sumber_info) ? state.survey.sumber_info : [];
+        const sInfo = sInfo_raw.slice(0, 8);
+        destroyChart('sumberInfoChart');
+        const elSumber = document.getElementById('sumberInfoChart');
+        if (elSumber && sInfo.length > 0) {
+            state.charts['sumberInfoChart'] = new Chart(elSumber, {
+                type: 'bar',
+                data: {
+                    labels: sInfo.map(d => formatChartLabel(d.label)),
+                    datasets: [{
+                        label: 'Jumlah Responden',
+                        data: sInfo.map(d => d.count),
+                        backgroundColor: '#0288d1',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    const item = sInfo[ctx.dataIndex];
+                                    const pct = item.percentage ? ` (${item.percentage}%)` : '';
+                                    return `Jumlah: ${ctx.raw} Responden${pct}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                autoSkip: false,
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                color: '#475569'
+                            }
+                        }
+                    },
+                    layout: {
+                        padding: { left: 4, right: 16 }
+                    }
+                }
+            });
+        }
+
+        // Kepuasan Layanan (Likert) Chart
+        const likert_raw = Array.isArray(state.survey.kepuasan_layanan) ? state.survey.kepuasan_layanan : [];
+        destroyChart('kepuasanLayananChart');
+        const elKepuasan = document.getElementById('kepuasanLayananChart');
+        if (elKepuasan && likert_raw.length > 0) {
+            const shortQuestions = likert_raw.map(item => {
+                let q = item.question;
+                if (q.includes('Kemudahan memperoleh informasi')) return 'Informasi PSB';
+                if (q.includes('Kemudahan akses melalui Whatsapp')) return 'Akses WA (Login)';
+                if (q.includes('Kemudahan menggunakan aplikasi')) return 'Aplikasi PSB Online';
+                if (q.includes('Informasi dalam aplikasi')) return 'Konten Aplikasi';
+                if (q.includes('PSB online memudahkan')) return 'Proses Pendaftaran';
+                if (q.includes('Sekolah melayani dengan baik')) return 'Pelayanan Kendala';
+                return q.slice(0, 25) + '...';
+            });
+
+            const likertLabels = ['5 (Sangat Baik/Mudah)', '4 (Baik/Mudah)', '3 (Cukup)', '2 (Kurang)', '1 (Sangat Kurang)', 'Tidak Diisi'];
+            const likertKeys = ['5', '4', '3', '2', '1', 'tidak diisi'];
+            const colors = ['#10b981', '#34d399', '#fbbf24', '#f87171', '#ef4444', '#94a3b8'];
+
+            const datasets = likertLabels.map((lbl, idx) => {
+                const targetKey = likertKeys[idx];
+                return {
+                    label: lbl,
+                    data: likert_raw.map(qItem => {
+                        const found = (qItem.distribution || []).find(d => {
+                            const dStr = String(d.label || '').trim().toLowerCase();
+                            return dStr.startsWith(targetKey);
+                        });
+                        return found ? found.count : 0;
+                    }),
+                    backgroundColor: colors[idx] || '#cbd5e1'
+                };
+            });
+
+            state.charts['kepuasanLayananChart'] = new Chart(elKepuasan, {
+                type: 'bar',
+                data: {
+                    labels: shortQuestions,
+                    datasets: datasets
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                padding: 12
+                            }
+                        },
+                        tooltip: {
+                            mode: 'nearest',
+                            intersect: true,
+                            filter: function(item) {
+                                return item.raw > 0;
+                            },
+                            callbacks: {
+                                label: function(ctx) {
+                                    const val = ctx.raw || 0;
+                                    const total = ctx.chart.data.datasets.reduce((sum, ds) => sum + (ds.data[ctx.dataIndex] || 0), 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                                    return `${ctx.dataset.label}: ${val.toLocaleString('id-ID')} Responden (${pct}%)`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { stacked: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: {
+                            stacked: true,
+                            grid: { display: false },
+                            ticks: {
+                                font: { size: 11, family: "'Inter', sans-serif" },
+                                color: '#475569'
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 }
 
@@ -1479,6 +1753,135 @@ function exportToCSV() {
     link.href = URL.createObjectURL(blob);
     link.download = `detail_${state.selectedOrg || 'all'}_${orgName}.csv`;
     link.click();
+}
+
+function exportSurveyToExcel() {
+    if (!state.survey) {
+        showToast('Data survei belum dimuat', 'error');
+        return;
+    }
+    try {
+        if (typeof XLSX !== 'undefined') {
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Alasan Mendaftar (Sentimen Positif)
+            const aL = (Array.isArray(state.survey.alasan_mendaftar) ? state.survey.alasan_mendaftar : []).map((d, i) => ({
+                'No': i + 1,
+                'Alasan Mendaftar': d.label || d.alasan,
+                'Jumlah Responden': d.count || d.jumlah || 0,
+                'Persentase (%)': d.percentage || 0
+            }));
+            const ws1 = XLSX.utils.json_to_sheet(aL);
+            XLSX.utils.book_append_sheet(wb, ws1, 'Alasan Mendaftar');
+
+            // Sheet 2: Area Perbaikan (Alasan Keluar)
+            const aK = (Array.isArray(state.survey.alasan_keluar) ? state.survey.alasan_keluar : [])
+                .filter(d => !String(d.label || '').toLowerCase().includes('tidak ada') && !String(d.label || '').toLowerCase().includes('semua sudah baik'))
+                .map((d, i) => ({
+                    'No': i + 1,
+                    'Area Perbaikan / Alasan Keluar': d.label || d.alasan,
+                    'Jumlah Responden': d.count || d.jumlah || 0,
+                    'Persentase (%)': d.percentage || 0
+                }));
+            const ws2 = XLSX.utils.json_to_sheet(aK);
+            XLSX.utils.book_append_sheet(wb, ws2, 'Area Perbaikan');
+
+            // Sheet 3: Sumber Informasi PSB
+            const sInfo = (Array.isArray(state.survey.sumber_info) ? state.survey.sumber_info : []).map((d, i) => ({
+                'No': i + 1,
+                'Sumber Informasi PSB': d.label,
+                'Jumlah Responden': d.count || 0,
+                'Persentase (%)': d.percentage || 0
+            }));
+            const ws3 = XLSX.utils.json_to_sheet(sInfo);
+            XLSX.utils.book_append_sheet(wb, ws3, 'Sumber Informasi');
+
+            // Sheet 4: Kepuasan Layanan (Likert)
+            const likertLabels = ['5 (Sangat Baik/Mudah)', '4 (Baik/Mudah)', '3 (Cukup)', '2 (Kurang)', '1 (Sangat Kurang)', 'Tidak Diisi'];
+            const likertKeys = ['5', '4', '3', '2', '1', 'tidak diisi'];
+            const likertRows = (Array.isArray(state.survey.kepuasan_layanan) ? state.survey.kepuasan_layanan : []).map((qItem, idx) => {
+                let row = { 'No': idx + 1, 'Aspek Layanan PSB': qItem.question };
+                likertLabels.forEach((lbl, i) => {
+                    const found = (qItem.distribution || []).find(d => String(d.label || '').trim().toLowerCase().startsWith(likertKeys[i]));
+                    row[lbl] = found ? found.count : 0;
+                });
+                return row;
+            });
+            const ws4 = XLSX.utils.json_to_sheet(likertRows);
+            XLSX.utils.book_append_sheet(wb, ws4, 'Kepuasan Layanan');
+
+            XLSX.writeFile(wb, 'Laporan_Survei_PSB_Petra.xlsx');
+            showToast('File Excel berhasil diunduh (.xlsx)', 'success');
+        } else {
+            exportSurveyToCSV();
+        }
+    } catch (e) {
+        console.error('Gagal export Excel:', e);
+        exportSurveyToCSV();
+    }
+}
+
+function exportSurveyToCSV() {
+    if (!state.survey) {
+        showToast('Data survei belum dimuat', 'error');
+        return;
+    }
+    let csvContent = "data:text/csv;charset=utf-8,\uFEFF"; // BOM untuk format Excel Indonesia/UTF-8
+    
+    // Section 1: Alasan Mendaftar
+    csvContent += "=== 1. TOP ALASAN MENDAFTAR (SENTIMEN POSITIF) ===\n";
+    csvContent += "No,Alasan Mendaftar,Jumlah Responden,Persentase (%)\n";
+    const aL = Array.isArray(state.survey.alasan_mendaftar) ? state.survey.alasan_mendaftar : [];
+    aL.forEach((d, i) => {
+        const label = `"${String(d.label || d.alasan || '').replace(/"/g, '""')}"`;
+        csvContent += `${i + 1},${label},${d.count || 0},${d.percentage || 0}%\n`;
+    });
+    csvContent += "\n";
+
+    // Section 2: Area Perbaikan
+    csvContent += "=== 2. TOP AREA PERBAIKAN / ALASAN KELUAR ===\n";
+    csvContent += "No,Area Perbaikan / Alasan Keluar,Jumlah Responden,Persentase (%)\n";
+    const aK = (Array.isArray(state.survey.alasan_keluar) ? state.survey.alasan_keluar : [])
+        .filter(d => !String(d.label || '').toLowerCase().includes('tidak ada') && !String(d.label || '').toLowerCase().includes('semua sudah baik'));
+    aK.forEach((d, i) => {
+        const label = `"${String(d.label || d.alasan || '').replace(/"/g, '""')}"`;
+        csvContent += `${i + 1},${label},${d.count || 0},${d.percentage || 0}%\n`;
+    });
+    csvContent += "\n";
+
+    // Section 3: Sumber Informasi
+    csvContent += "=== 3. SUMBER INFORMASI PSB ===\n";
+    csvContent += "No,Sumber Informasi PSB,Jumlah Responden,Persentase (%)\n";
+    const sInfo = Array.isArray(state.survey.sumber_info) ? state.survey.sumber_info : [];
+    sInfo.forEach((d, i) => {
+        const label = `"${String(d.label || '').replace(/"/g, '""')}"`;
+        csvContent += `${i + 1},${label},${d.count || 0},${d.percentage || 0}%\n`;
+    });
+    csvContent += "\n";
+
+    // Section 4: Kepuasan Layanan
+    csvContent += "=== 4. TINGKAT KEPUASAN LAYANAN (LIKERT 1-5) ===\n";
+    csvContent += "No,Aspek Layanan PSB,5 (Sangat Baik/Mudah),4 (Baik/Mudah),3 (Cukup),2 (Kurang),1 (Sangat Kurang),Tidak Diisi\n";
+    const likertLabels = ['5 (Sangat Baik/Mudah)', '4 (Baik/Mudah)', '3 (Cukup)', '2 (Kurang)', '1 (Sangat Kurang)', 'Tidak Diisi'];
+    const likertKeys = ['5', '4', '3', '2', '1', 'tidak diisi'];
+    const likertRows = Array.isArray(state.survey.kepuasan_layanan) ? state.survey.kepuasan_layanan : [];
+    likertRows.forEach((qItem, idx) => {
+        const qLabel = `"${String(qItem.question || '').replace(/"/g, '""')}"`;
+        const vals = likertKeys.map(key => {
+            const found = (qItem.distribution || []).find(d => String(d.label || '').trim().toLowerCase().startsWith(key));
+            return found ? found.count : 0;
+        });
+        csvContent += `${idx + 1},${qLabel},${vals.join(',')}\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "Laporan_Survei_PSB_Petra.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('File CSV berhasil diunduh', 'success');
 }
 
 // Utilities

@@ -1473,3 +1473,20 @@ body {
     color: var(--text-secondary);
     font-weight: 500;
 }
+
+/* Survey Export Buttons Hover & Transitions */
+#btnExportSurveyCSV, #btnExportSurveyExcel {
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#btnExportSurveyCSV:hover {
+    background: var(--text-primary) !important;
+    color: #ffffff !important;
+    border-color: var(--text-primary) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+#btnExportSurveyExcel:hover {
+    background: var(--green-dark) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(2, 197, 190, 0.35) !important;
+}

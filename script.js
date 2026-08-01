@@ -224,6 +224,13 @@ function setupEventListeners() {
             document.getElementById('pageTitle').textContent = titles[item.dataset.target].t;
             document.getElementById('pageSubtitle').textContent = titles[item.dataset.target].s;
             
+            // Toggle Global Filters vs Survey Export Actions in Header
+            const isSurvey = (item.dataset.target === 'section-survey');
+            const globalFiltersEl = document.getElementById('globalFiltersBar');
+            const surveyActionsEl = document.getElementById('surveyTopbarActions');
+            if (globalFiltersEl) globalFiltersEl.style.display = isSurvey ? 'none' : 'flex';
+            if (surveyActionsEl) surveyActionsEl.style.display = isSurvey ? 'flex' : 'none';
+
             // Re-render charts to fix width issues when unhidden
             setTimeout(renderCharts, 10);
         });

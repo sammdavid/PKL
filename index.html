@@ -68,7 +68,7 @@
                     </div>
                 </div>
                 <div class="topbar-right">
-                    <div class="global-filters">
+                    <div class="global-filters" id="globalFiltersBar">
                         <div class="filter-group" id="filterGroupPeriod" tabindex="0">
                             <span class="material-icons-round filter-icon">date_range</span>
                             <div class="custom-dropdown" id="dropdownPeriod">
@@ -105,6 +105,16 @@
                         <button id="btnResetFilter" class="btn btn-outline" style="height: 40px; padding: 0 14px; gap: 6px; font-size: 13px; border-color: rgba(0,0,0,0.12); display: flex; align-items: center;" title="Kembalikan semua filter ke default">
                             <span class="material-icons-round" style="font-size: 18px;">filter_alt_off</span>
                             <span>Reset Filter</span>
+                        </button>
+                    </div>
+                    <div id="surveyTopbarActions" style="display: none; align-items: center; gap: 10px;">
+                        <button id="btnExportSurveyCSV" class="btn btn-outline" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; font-weight: 500; font-size: 13px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary); height: 40px;">
+                            <span class="material-icons-round" style="font-size: 18px;">description</span>
+                            <span>Download CSV</span>
+                        </button>
+                        <button id="btnExportSurveyExcel" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; font-weight: 500; font-size: 13px; cursor: pointer; background: var(--green-primary); color: white; border: none; box-shadow: 0 2px 8px rgba(2, 197, 190, 0.25); height: 40px;">
+                            <span class="material-icons-round" style="font-size: 18px;">table_view</span>
+                            <span>Download Excel (.xlsx)</span>
                         </button>
                     </div>
                 </div>
@@ -223,23 +233,6 @@
 
                 <!-- Analisis Survei Section -->
                 <section id="section-survey" class="dashboard-section">
-                    <!-- Header & Export Actions -->
-                    <div class="survey-header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; background: var(--bg-card); padding: 18px 24px; border-radius: 16px; border: 1px solid var(--border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
-                        <div>
-                            <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 0;">Analisis Survei PSB</h2>
-                            <p style="font-size: 13px; color: var(--text-secondary); margin: 4px 0 0;">Unduh hasil agregasi angket penerimaan siswa baru dalam format Excel (.xlsx) atau CSV</p>
-                        </div>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button id="btnExportSurveyCSV" class="btn btn-outline" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; font-weight: 500; font-size: 13px; cursor: pointer; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-primary);">
-                                <span class="material-icons-round" style="font-size: 18px;">description</span>
-                                <span>Download CSV</span>
-                            </button>
-                            <button id="btnExportSurveyExcel" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; font-weight: 500; font-size: 13px; cursor: pointer; background: var(--green-primary); color: white; border: none; box-shadow: 0 2px 8px rgba(2, 197, 190, 0.25);">
-                                <span class="material-icons-round" style="font-size: 18px;">table_view</span>
-                                <span>Download Excel (.xlsx)</span>
-                            </button>
-                        </div>
-                    </div>
                     <div class="charts-row split-1-1">
                         <div class="chart-card border-top-red">
                             <div class="chart-header header-red">
@@ -443,6 +436,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="script.js?v=39"></script>
+    <script src="script.js?v=40"></script>
 </body>
 </html>

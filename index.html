@@ -132,7 +132,7 @@
                             <button class="download-menu-item" onclick="exportAllCommentsExcel(); hideSurveyDownloadMenu();">
                                 <span class="material-icons-round" style="color: #02C5BE;">forum</span>
                                 <div class="item-text">
-                                    <strong>903 Saran & Masukan Lengkap (.xlsx)</strong>
+                                    <strong>Saran & Masukan Lengkap (.xlsx)</strong>
                                     <span>Seluruh komentar beserta sentimen & topik</span>
                                 </div>
                             </button>
@@ -351,7 +351,7 @@
                                     <span class="material-icons-round">forum</span>
                                 </div>
                                 <div>
-                                    <h4>Eksplorasi Seluruh 903 Saran & Masukan Responden</h4>
+                                    <h4>Eksplorasi Seluruh Saran & Masukan Responden</h4>
                                     <p>Buka halaman khusus untuk memfilter sentimen/topik, mencari kata kunci, dan melihat seluruh komentar responden secara lengkap</p>
                                 </div>
                             </div>
@@ -377,7 +377,7 @@
                     <div class="saran-explorer-header">
                         <div class="saran-header-left">
                             <h2>Eksplorasi Seluruh Saran & Masukan Responden</h2>
-                            <p>Daftar lengkap 903 komentar dan masukan yang dikelompokkan berdasarkan analisis sentimen dan topik</p>
+                            <p>Daftar lengkap seluruh komentar dan masukan yang dikelompokkan berdasarkan analisis sentimen dan topik</p>
                         </div>
                         <div class="saran-header-actions">
                             <button class="btn btn-outline" onclick="exportAllCommentsExcel()">
@@ -393,19 +393,19 @@
                         <div class="saran-sentiment-tabs" id="saranSentimentTabs">
                             <button class="saran-tab active" data-sentiment="ALL" onclick="filterSaranBySentiment('ALL')">
                                 <span>Semua</span>
-                                <span class="badge" id="countAllSaran">903</span>
+                                <span class="badge" id="countAllSaran">0</span>
                             </button>
                             <button class="saran-tab tab-perbaikan" data-sentiment="Saran Perbaikan" onclick="filterSaranBySentiment('Saran Perbaikan')">
                                 <span>Saran Perbaikan</span>
-                                <span class="badge" id="countPerbaikanSaran">469</span>
+                                <span class="badge" id="countPerbaikanSaran">0</span>
                             </button>
                             <button class="saran-tab tab-positif" data-sentiment="Positif" onclick="filterSaranBySentiment('Positif')">
                                 <span>Positif / Apresiasi</span>
-                                <span class="badge" id="countPositifSaran">226</span>
+                                <span class="badge" id="countPositifSaran">0</span>
                             </button>
                             <button class="saran-tab tab-netral" data-sentiment="Netral" onclick="filterSaranBySentiment('Netral')">
                                 <span>Netral</span>
-                                <span class="badge" id="countNetralSaran">208</span>
+                                <span class="badge" id="countNetralSaran">0</span>
                             </button>
                         </div>
 
@@ -474,7 +474,7 @@
                         <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                             <div class="table-title">
                                 <span class="material-icons-round" style="color: var(--green-primary);">list_alt</span>
-                                <h3 id="saranTableTitle">Daftar Saran & Masukan (903)</h3>
+                                <h3 id="saranTableTitle">Daftar Saran & Masukan</h3>
                             </div>
                             <div class="page-size-selector" style="display: flex; align-items: center; gap: 8px;">
                                 <label style="font-size: 13px; font-weight: 600; color: var(--text-secondary);">Tampilkan:</label>
@@ -510,7 +510,7 @@
                             </table>
                         </div>
                         <div class="table-footer">
-                            <div class="table-info" id="saranTableInfo">Menampilkan 1-15 dari 903 komentar</div>
+                            <div class="table-info" id="saranTableInfo">Memuat komentar...</div>
                             <div class="pagination">
                                 <button class="icon-btn" id="saranPrevBtn" onclick="changeSaranPage(-1)"><span class="material-icons-round">chevron_left</span></button>
                                 <span class="page-indicator" id="saranPageIndicator">Halaman 1 dari 61</span>

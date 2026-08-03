@@ -439,7 +439,7 @@ function navigateDetail(level, jenjang, org) {
     updateDetailBreadcrumb();
     
     // Render appropriate level
-    const filtered = getFilteredRecords();
+    const filtered = getFilteredRecords(true);
     if (level === 0) {
         renderDetailLevel0(filtered);
     } else if (level === 1) {
@@ -1069,9 +1069,13 @@ function animateCount(el, end) {
     requestAnimationFrame(step);
 }
 
-function getFilteredRecords() {
+function getFilteredRecords(ignoreLocationFilters = false) {
     return state.records.filter(r => {
         const mPeriod = state.filters.period === 'all' || r.period_code === state.filters.period;
+        
+        if (ignoreLocationFilters) {
+            return mPeriod;
+        }
         
         let mJenjang = true;
         if (state.filters.jenjang !== 'all') {
@@ -1657,6 +1661,9 @@ async function loadAndRenderTextMining() {
             // Update total saran count
             const tmTotal = document.getElementById('tmTotalSaran');
             if (tmTotal) tmTotal.textContent = sentimentRes.value.total.toLocaleString('id-ID');
+            
+            // Update sentiment explorer tab badges dynamically
+            updateSaranExplorerBadges(sentimentRes.value);
         }
 
         if (topicRes.status === 'fulfilled') {
@@ -1668,6 +1675,24 @@ async function loadAndRenderTextMining() {
     } catch (e) {
         console.warn('Text mining data not available:', e);
     }
+}
+
+function updateSaranExplorerBadges(sentimentData) {
+    const allComments = sentimentData.all_comments || [];
+    const countAll = allComments.length;
+    const countPositif = allComments.filter(c => c.sentiment === 'Positif').length;
+    const countPerbaikan = allComments.filter(c => c.sentiment === 'Saran Perbaikan').length;
+    const countNetral = allComments.filter(c => c.sentiment === 'Netral').length;
+
+    const elAll = document.getElementById('countAllSaran');
+    const elPositif = document.getElementById('countPositifSaran');
+    const elPerbaikan = document.getElementById('countPerbaikanSaran');
+    const elNetral = document.getElementById('countNetralSaran');
+
+    if (elAll) elAll.textContent = countAll.toLocaleString('id-ID');
+    if (elPositif) elPositif.textContent = countPositif.toLocaleString('id-ID');
+    if (elPerbaikan) elPerbaikan.textContent = countPerbaikan.toLocaleString('id-ID');
+    if (elNetral) elNetral.textContent = countNetral.toLocaleString('id-ID');
 }
 
 function renderWordCloud(data) {
@@ -1866,7 +1891,7 @@ function renderSentimentSamples(data) {
         <div style="margin-top: 14px;">
             <button class="btn btn-outline" style="width: 100%; justify-content: center; border-color: var(--green-primary); color: var(--green-dark); padding: 10px;" onclick="openSaranExplorer('ALL', 'ALL')">
                 <span class="material-icons-round">forum</span>
-                <span>Eksplorasi Semua 903 Saran & Masukan →</span>
+                <span>Eksplorasi Semua ${data.total} Saran & Masukan →</span>
             </button>
         </div>`;
     html += '</div>';
@@ -2107,7 +2132,7 @@ function switchDashboardSection(sectionId) {
         'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
         'section-retention': {t: 'Retensi per Jenjang & Sekolah', s: 'Detail retensi berdasar jenjang dan unit sekolah'},
         'section-survey': {t: 'Analisis Survei & Saran', s: 'Daftar masukan/saran dan unduh data'},
-        'section-saran-detail': {t: 'Eksplorasi Semua Saran & Masukan (903 Komentar)', s: 'Filter, cari kata kunci, dan telusuri seluruh komentar survei per sekolah'}
+        'section-saran-detail': {t: 'Eksplorasi Semua Saran & Masukan', s: 'Filter, cari kata kunci, dan telusuri seluruh komentar survei per sekolah'}
     };
 
     const h = document.getElementById('topbarPageTitle');
@@ -2120,6 +2145,19 @@ function switchDashboardSection(sectionId) {
     const surveyActionsEl = document.getElementById('surveyTopbarActions');
     if (globalFiltersEl) globalFiltersEl.style.display = isSurvey ? 'none' : 'flex';
     if (surveyActionsEl) surveyActionsEl.style.display = isSurvey ? 'flex' : 'none';
+
+    // Opsi 1: Sembunyikan Jenjang dan Sekolah filter di tab Detail Sekolah
+    const jenjangFilter = document.getElementById('filterGroupJenjang');
+    const orgFilter = document.getElementById('filterGroupOrg');
+    if (jenjangFilter && orgFilter) {
+        if (sectionId === 'section-details') {
+            jenjangFilter.style.display = 'none';
+            orgFilter.style.display = 'none';
+        } else {
+            jenjangFilter.style.display = '';
+            orgFilter.style.display = '';
+        }
+    }
 
     document.querySelectorAll('.nav-item').forEach(item => {
         if (item.dataset.target === sectionId) {
@@ -2266,7 +2304,7 @@ function renderSaranExplorerTable() {
     if (!tbody) return;
 
     const filtered = getFilteredSaranItems();
-    const allTotal = state.textMining?.sentiment?.all_comments?.length || 903;
+    const allTotal = state.textMining?.sentiment?.all_comments?.length || 0;
     
     // Update count title
     const tableTitleEl = document.getElementById('saranTableTitle');

@@ -1,0 +1,427 @@
+{
+  "timestamp": "2026-08-03T22:21:10.391094",
+  "total_evaluated": 50,
+  "accuracy": 88.0,
+  "per_class_metrics": {
+    "Positif": {
+      "precision": 88.89,
+      "recall": 92.31,
+      "f1": 90.57,
+      "tp": 24,
+      "fp": 3,
+      "fn": 2
+    },
+    "Saran Perbaikan": {
+      "precision": 95.24,
+      "recall": 86.96,
+      "f1": 90.91,
+      "tp": 20,
+      "fp": 1,
+      "fn": 3
+    },
+    "Netral": {
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0,
+      "tp": 0,
+      "fp": 2,
+      "fn": 1
+    }
+  },
+  "details": [
+    {
+      "id": 80,
+      "text": "Pengalaman saya dengan PSB dari akun anak ke 2 saya sudah sangat baik dan memudahkan",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 522,
+      "text": "Pengumpulan data siswa baru lbh mudah dlm bentuk fisik/fotocopy. Krn data softcopy lbh merepotkan ortu yg hrs scan/foto data satu2.",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 232,
+      "text": "Sulitnya mendapat informasi terupdate dalam proses psb",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 838,
+      "text": "Terus dipertahankan yang sudah baik dan terus berinovasi tanpa henti",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 36,
+      "text": "Sudah Cukup Bagus",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 1193,
+      "text": "Untuk informasi Di PSB stlh pembayaran bisa tolong Di update karena stlh pembayaran Kita ortu binggung mau ngapain udah GK bisa liat lg mau ngapain ....pengumuman nya apa GT ....soal spp , pengunaan sarana PRA sarana ( hp/ laptop untuk sekolah) seragam ( udah Di umumkan barengan ) ,buku , kek sosialisasi untuk anak Yang mau SMP gimana ...Kita Yang anak nya tinggal binggung GK Ada arahan Sama sekali ...mau gimana harus gimana ...Kita jadi nya kesana nya cerewet WA Petra n tanya terus ....\n\nTerima kasih",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 895,
+      "text": "uang pengembangan gedung dan spp jangan terlalu mahal mahal di karenakan ortu yang gaji nya pas pas an tidak bisa menyekolahkan anak nya di petra..padahal ortu nya ingin menyekolahkan  yang terbaik buat anak anak  nya..",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 1007,
+      "text": "Informasi untuk pengisian kurang jelas",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 363,
+      "text": "Semua sdh bagus semoga bs dipertahankan dan ditingkatkan.",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 327,
+      "text": "Pelayanan yang semakin meningkat  terus untuk dipertahankan, jangan cepat puas diri, dan menggali pontensi anak secara maksimal jg menjaga serta mengawasi agar lingkungan kondusif tidak terjadi bullying di sekolah dengan sesekali turun ke lapangan sekolah saat anak bermain dan melihat pojok2 sekolah saat selesai aktivas belajar dan ekstrakurikuler. Tuhan memberkati.",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 79,
+      "text": "Semua sudah sesuai dan bagus dari kemudahan aplikasi PSB online dan adanya bimbingan dari Petra lewat WhatsApp.\nTerimakasih God Jobs👍👍👍👍Tuhan Yesus memberkati kita semua.",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 697,
+      "text": "Waktu PSB tolong disesuaikan kembali jaraknya",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 888,
+      "text": "Ditingkatkan saja spy kedepan lbh baik dlm segala hal",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 160,
+      "text": "Belum ada",
+      "model": "Saran Perbaikan",
+      "human": "Netral",
+      "match": false
+    },
+    {
+      "id": 659,
+      "text": "Semua sudah baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 1163,
+      "text": "Sudah cukup baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 1069,
+      "text": "Semua sdh tersusun dg baik dan sistematis. Terima Kasih",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 886,
+      "text": "Lebih memberikan keringanan masalah waktu pembayaran dan untuk penerimaan siswa baru yang melalui jalur prestasi diumumkan dengan jelas persyaratan dan cara mengikutinya. Untuk prestasi nilai di sekolah mungkin bisa di umumkan secara langsung siapa saja yang mendapatkan kuotanya sehingga bisa dengan jelas bahwa kuota tersebut yg di umumkan adalah nyata memang ada yang menerima bukan fiktif.",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 409,
+      "text": "Untuk orang tuang yang pertama kali mendaftarkan sekolah, Admin WA dari Petra sangat membantu. Mungkin kedepan perlu adanya informasi yang lebih lengkap terkait biaya-biaya sekolah, apa saja yang akan yang diperoleh (misal buku, seragam,dsb), kegiatan-kegiatan extra. Info tersebut memang confidential, namun untuk orangtua yang serius hendak mendaftarkan anak-anaknya di petra maka info tersebut sangat dibutuhkan.",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 703,
+      "text": "ada aplikasi langsung,tidak melaluibwa dulu untuk admission",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 229,
+      "text": "Log in menggunakan email mungkin sedikit merepotkan dibanding log in menggunakan Nomor siswa.",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 898,
+      "text": "Ada metode pembayaran lain, misal dengan CC",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 999,
+      "text": "Sudah baik terus ditingkatkan saja",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 226,
+      "text": "Tidak ada , sudah baik",
+      "model": "Netral",
+      "human": "Positif",
+      "match": false
+    },
+    {
+      "id": 392,
+      "text": "untuk UP dan uang sekolah mohon tidak terlalu tinggi. bisa dibantu adakan program potongan bagi siswa yang kurang mampu tapi siswa ingin sekali sekolah di Petra",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 145,
+      "text": "Sudah baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 37,
+      "text": "Baik dan mempermudah orang tua dalam memperoleh informasi, untuk tanggapan admin juga fast respon dan jelas.",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 194,
+      "text": "Mgkn dari pihak sekolah lbh aktif memberikan WA buat ortu murid. Krn ortu murid tidak 100% pegang hp. Dan mgkn kadang wa nya ketumpuk",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 1036,
+      "text": "terus ber inovasi dalam pelayanan dan informasi secara online agar mudah tersampaikan dan terjangkau, terus menjadi sekolah yang berbukti pekerti dan monjolkan ajaran Tuhan Yesus",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 1002,
+      "text": "pendaftaran harus online ya...\nPromosi potongan kurang...\nTapi sudah lumayan",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 274,
+      "text": "Sudah baik. Terima kasih.",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 425,
+      "text": "Perlu sedikit di perbaiki lagi...thx u🙏",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 195,
+      "text": "lebih ditingkatkan kemudaahan pendaftaran siswa",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 5,
+      "text": "Sudah bagus,pembinaan karakter tentang sopan santun perlu ditingkatkan",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 49,
+      "text": "Buat lebih mudah ya untuk akses",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 1019,
+      "text": "semoga anak saya betah sekolah di SMP PETRA,dan SMP PETRA lancar terusss",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 312,
+      "text": "Jam masuk sekolah terlalu pagi bjsa dibuat jam 07.30",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 324,
+      "text": "Sudah baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 561,
+      "text": "Semua cukup baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 663,
+      "text": "Fitur dalam aplikasi PSB online lebih ditingkatkan",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 816,
+      "text": "Sudah bagus",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 379,
+      "text": "Cukup baik",
+      "model": "Netral",
+      "human": "Positif",
+      "match": false
+    },
+    {
+      "id": 585,
+      "text": "Cukup baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 529,
+      "text": "Tidak ada, semua sudah baik. Terima kasih",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 401,
+      "text": "Lebih disiplin pada semua murid",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 701,
+      "text": "buatlah dalam bentuk aplikasi dari pada web, karena web udah ketinggalan jaman banget dan susah \n\nlebih mudah aplikasi",
+      "model": "Saran Perbaikan",
+      "human": "Saran Perbaikan",
+      "match": true
+    },
+    {
+      "id": 639,
+      "text": "Sudah baik. Terus dipertahankan",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 725,
+      "text": "Sudah baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 571,
+      "text": "Semua sudah baik",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    },
+    {
+      "id": 402,
+      "text": "Smoga SMP Petra memberi pembelajaran yg lebih baik dan trs berinovasi.",
+      "model": "Positif",
+      "human": "Positif",
+      "match": true
+    }
+  ],
+  "errors": [
+    {
+      "id": 160,
+      "text": "Belum ada",
+      "model": "Saran Perbaikan",
+      "human": "Netral",
+      "match": false
+    },
+    {
+      "id": 409,
+      "text": "Untuk orang tuang yang pertama kali mendaftarkan sekolah, Admin WA dari Petra sangat membantu. Mungkin kedepan perlu adanya informasi yang lebih lengkap terkait biaya-biaya sekolah, apa saja yang akan yang diperoleh (misal buku, seragam,dsb), kegiatan-kegiatan extra. Info tersebut memang confidential, namun untuk orangtua yang serius hendak mendaftarkan anak-anaknya di petra maka info tersebut sangat dibutuhkan.",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 703,
+      "text": "ada aplikasi langsung,tidak melaluibwa dulu untuk admission",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 226,
+      "text": "Tidak ada , sudah baik",
+      "model": "Netral",
+      "human": "Positif",
+      "match": false
+    },
+    {
+      "id": 195,
+      "text": "lebih ditingkatkan kemudaahan pendaftaran siswa",
+      "model": "Positif",
+      "human": "Saran Perbaikan",
+      "match": false
+    },
+    {
+      "id": 379,
+      "text": "Cukup baik",
+      "model": "Netral",
+      "human": "Positif",
+      "match": false
+    }
+  ]
+}

@@ -51,7 +51,14 @@ const ORG_NAMES = {
     "S04": "SMA Kristen Petra 4",
     "S05": "SMA Kristen Petra 5",
     "S06": "SMA Kristen Petra Acitya",
-    "M01": "SMK Kristen Petra"
+    "M01": "SMK Kristen Petra",
+    "A01": "SMA Kristen Petra 1",
+    "A02": "SMA Kristen Petra 2",
+    "A03": "SMA Kristen Petra 3",
+    "A04": "SMA Kristen Petra 4",
+    "A05": "SMA Kristen Petra 5",
+    "A06": "SMA Kristen Petra Acitya",
+    "SMK": "SMK Kristen Petra"
 };
 
 function getOrgName(code) {
@@ -143,6 +150,8 @@ async function init() {
     await loadData();
     populateFilters();
     updateDashboard();
+    // Load text mining data for survey section
+    loadAndRenderTextMining();
 }
 
 async function loadData() {
@@ -200,37 +209,18 @@ function setupEventListeners() {
     // Nav
     document.querySelectorAll('.nav-item').forEach(item => {
         item.addEventListener('click', (e) => {
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.querySelectorAll('.dashboard-section').forEach(s => s.classList.remove('active'));
-            item.classList.add('active');
-            const target = document.getElementById(item.dataset.target);
-            if (target) target.classList.add('active');
+            const targetId = item.dataset.target;
             
             // Reset detail drill-down when navigating to Detail Sekolah
-            if (item.dataset.target === 'section-details') {
+            if (targetId === 'section-details') {
                 state.detailLevel = 0;
                 state.selectedJenjang = null;
                 state.selectedOrg = null;
                 navigateDetail(0);
             }
             
-            // Update title
-            const titles = {
-                'section-overview': {t: 'Overview', s: 'Ringkasan transisi dan retensi siswa'},
-                'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
-                'section-survey': {t: 'Analisis Survei', s: 'Data alasan siswa lanjut dan keluar'},
-                'section-details': {t: 'Detail Sekolah', s: 'Navigasi detail per jenjang, sekolah, dan kelas'}
-            };
-            document.getElementById('pageTitle').textContent = titles[item.dataset.target].t;
-            document.getElementById('pageSubtitle').textContent = titles[item.dataset.target].s;
+            switchDashboardSection(targetId);
             
-            // Toggle Global Filters vs Survey Export Actions in Header
-            const isSurvey = (item.dataset.target === 'section-survey');
-            const globalFiltersEl = document.getElementById('globalFiltersBar');
-            const surveyActionsEl = document.getElementById('surveyTopbarActions');
-            if (globalFiltersEl) globalFiltersEl.style.display = isSurvey ? 'none' : 'flex';
-            if (surveyActionsEl) surveyActionsEl.style.display = isSurvey ? 'flex' : 'none';
-
             // Re-render charts to fix width issues when unhidden
             setTimeout(renderCharts, 10);
         });
@@ -292,6 +282,28 @@ function setupEventListeners() {
         updateDashboard(); 
     });
     setupCustomDropdown('filterGroupOrg', 'organization', () => { updateDashboard(); });
+
+    setupSaranCustomDropdown('saranFilterGroupTopic', 'topic', 'Semua Topik', () => {
+        saranExplorerState.currentPage = 1;
+        renderSaranExplorerTable();
+    });
+    setupSaranCustomDropdown('saranFilterGroupJenjang', 'jenjang', 'Semua Jenjang', () => {
+        saranExplorerState.currentPage = 1;
+        renderSaranExplorerTable();
+    });
+    setupSaranCustomDropdown('saranFilterGroupOrg', 'sekolah', 'Semua Sekolah', () => {
+        saranExplorerState.currentPage = 1;
+        renderSaranExplorerTable();
+    });
+    setupSaranCustomDropdown('saranFilterGroupPageSize', 'pageSize', '15 per halaman', (val) => {
+        changeSaranPageSize(val);
+    });
+
+    window.addEventListener('resize', () => {
+        if (document.getElementById('section-survey')?.classList.contains('active') && state.textMining?.wordFreq) {
+            renderWordCloud(state.textMining.wordFreq);
+        }
+    });
 
     function resetAllFilters() {
         state.filters.period = 'all';
@@ -1394,7 +1406,7 @@ function renderCharts(filtered = getFilteredRecords()) {
                     datasets: [{
                         label: 'Jumlah Responden',
                         data: aK.map(d => d.count || d.jumlah),
-                        backgroundColor: '#e53935', // Merah untuk area perbaikan / alasan keluar
+                        backgroundColor: '#ff9800', // Amber/Orange to match Overview Keluar
                         borderRadius: 6
                     }]
                 },
@@ -1442,7 +1454,7 @@ function renderCharts(filtered = getFilteredRecords()) {
                     datasets: [{
                         label: 'Jumlah Responden',
                         data: aL.map(d => d.count || d.jumlah),
-                        backgroundColor: '#10b981', // Hijau untuk sentimen positif / alasan lanjut
+                        backgroundColor: '#02C5BE', // Petra Primary Bright Teal
                         borderRadius: 6
                     }]
                 },
@@ -1493,7 +1505,7 @@ function renderCharts(filtered = getFilteredRecords()) {
                     datasets: [{
                         label: 'Jumlah Responden',
                         data: sInfo.map(d => d.count),
-                        backgroundColor: '#0288d1',
+                        backgroundColor: '#0d9488', // Petra Teal 600
                         borderRadius: 6
                     }]
                 },
@@ -1549,7 +1561,7 @@ function renderCharts(filtered = getFilteredRecords()) {
 
             const likertLabels = ['5 (Sangat Baik/Mudah)', '4 (Baik/Mudah)', '3 (Cukup)', '2 (Kurang)', '1 (Sangat Kurang)', 'Tidak Diisi'];
             const likertKeys = ['5', '4', '3', '2', '1', 'tidak diisi'];
-            const colors = ['#10b981', '#34d399', '#fbbf24', '#f87171', '#ef4444', '#94a3b8'];
+            const colors = ['#00897B', '#02C5BE', '#2dd4bf', '#f59e0b', '#ef4444', '#94a3b8']; // Harmonious Likert scale with Petra Teal
 
             const datasets = likertLabels.map((lbl, idx) => {
                 const targetKey = likertKeys[idx];
@@ -1616,6 +1628,746 @@ function renderCharts(filtered = getFilteredRecords()) {
             });
         }
     }
+}
+
+// ============================================================
+// TEXT MINING: Saran & Masukan Rendering
+// ============================================================
+
+async function loadAndRenderTextMining() {
+    try {
+        const [wordFreqRes, sentimentRes, topicRes] = await Promise.allSettled([
+            fetch('data/survey_data/word_frequency.json').then(r => r.json()),
+            fetch('data/survey_data/sentimen_saran.json').then(r => r.json()),
+            fetch('data/survey_data/topik_saran.json').then(r => r.json())
+        ]);
+
+        if (wordFreqRes.status === 'fulfilled') {
+            state.textMining = state.textMining || {};
+            state.textMining.wordFreq = wordFreqRes.value;
+            renderWordCloud(wordFreqRes.value);
+        }
+
+        if (sentimentRes.status === 'fulfilled') {
+            state.textMining = state.textMining || {};
+            state.textMining.sentiment = sentimentRes.value;
+            renderSentimentDonut(sentimentRes.value);
+            renderSentimentSamples(sentimentRes.value);
+            populateSaranOrgFilter();
+            // Update total saran count
+            const tmTotal = document.getElementById('tmTotalSaran');
+            if (tmTotal) tmTotal.textContent = sentimentRes.value.total.toLocaleString('id-ID');
+        }
+
+        if (topicRes.status === 'fulfilled') {
+            state.textMining = state.textMining || {};
+            state.textMining.topics = topicRes.value;
+            renderTopicBarChart(topicRes.value);
+            renderTopicAccordion(topicRes.value);
+        }
+    } catch (e) {
+        console.warn('Text mining data not available:', e);
+    }
+}
+
+function renderWordCloud(data) {
+    const wrapper = document.getElementById('wordCloudWrapper');
+    let canvas = document.getElementById('wordCloudCanvas');
+    if (!wrapper || !data.top_words || data.top_words.length === 0) return;
+
+    if (!canvas) {
+        wrapper.innerHTML = '<canvas id="wordCloudCanvas" width="900" height="340" style="width: 100%; height: 340px; cursor: pointer;"></canvas>';
+        canvas = document.getElementById('wordCloudCanvas');
+    }
+
+    const words = data.top_words.slice(0, 55);
+    if (words.length === 0) return;
+
+    const width = wrapper.clientWidth || 900;
+    const height = 340;
+    canvas.width = width;
+    canvas.height = height;
+
+    const maxCount = Math.max(...words.map(w => w.count));
+    const minCount = Math.min(...words.map(w => w.count));
+
+    const colorPalette = [
+        '#02C5BE', '#00897B', '#0d9488', '#f59e0b', '#ff9800',
+        '#0f766e', '#3b82f6', '#475569', '#10b981', '#14b8a6'
+    ];
+
+    if (typeof WordCloud === 'function') {
+        const list = words.map(w => {
+            const ratio = maxCount === minCount ? 0.5 : (w.count - minCount) / (maxCount - minCount);
+            const size = Math.round(16 + Math.pow(ratio, 0.65) * 44);
+            return [w.word, size, w.count];
+        });
+
+        try {
+            WordCloud(canvas, {
+                list: list,
+                gridSize: Math.max(4, Math.round(12 * width / 1024)),
+                weightFactor: 1,
+                fontFamily: "'Outfit', 'Inter', 'Segoe UI', sans-serif",
+                fontWeight: 'bold',
+                color: function(word, weight, fontSize, distance, theta, idx) {
+                    return colorPalette[idx % colorPalette.length];
+                },
+                rotateRatio: 0.25,
+                rotationSteps: 2,
+                backgroundColor: 'transparent',
+                shuffle: true,
+                drawOutOfBound: false,
+                click: function(item) {
+                    if (item && item[0]) {
+                        openSaranExplorer('ALL', 'ALL', item[0], 'ALL');
+                    }
+                },
+                hover: function(item) {
+                    canvas.style.cursor = item ? 'pointer' : 'default';
+                }
+            });
+            return;
+        } catch (e) {
+            console.warn('WordCloud2 canvas render error, using fallback:', e);
+        }
+    }
+
+    // Fallback if WordCloud CDN fails to load
+    let html = `<div class="word-cloud-container" style="display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 12px; padding: 20px;">`;
+    words.forEach((w, idx) => {
+        const ratio = maxCount === minCount ? 0.5 : (w.count - minCount) / (maxCount - minCount);
+        const fontSize = Math.round(15 + Math.pow(ratio, 0.7) * 29);
+        const fontWeight = ratio > 0.6 ? '800' : (ratio > 0.3 ? '700' : '600');
+        const color = colorPalette[idx % colorPalette.length];
+        const opacity = ratio > 0.5 ? '1' : (ratio > 0.2 ? '0.95' : '0.85');
+
+        html += `<span class="word-cloud-tag" 
+            title="Frekuensi: ${w.count} kali dalam saran & masukan — Klik untuk filter komentar" 
+            onclick="openSaranExplorer('ALL', 'ALL', '${w.word}')" 
+            style="font-size: ${fontSize}px; font-weight: ${fontWeight}; color: ${color}; opacity: ${opacity}; margin: 6px 12px; cursor: pointer;">
+            ${w.word}
+        </span>`;
+    });
+    html += `</div>`;
+    wrapper.innerHTML = html;
+}
+
+function renderWordCloudFallback(container, data) {
+    renderWordCloud(data);
+}
+
+function renderSentimentDonut(data) {
+    destroyChart('sentimentDonutChart');
+    const el = document.getElementById('sentimentDonutChart');
+    if (!el || !data.summary) return;
+
+    const paletteMap = {
+        'Positif': '#02C5BE',
+        'Saran Perbaikan': '#ff9800',
+        'Netral': '#64748b'
+    };
+
+    const bgColors = data.summary.map(s => paletteMap[s.label] || s.color || '#94a3b8');
+
+    state.charts['sentimentDonutChart'] = new Chart(el, {
+        type: 'doughnut',
+        data: {
+            labels: data.summary.map(s => s.label),
+            datasets: [{
+                data: data.summary.map(s => s.count),
+                backgroundColor: bgColors,
+                borderWidth: 0,
+                cutout: '75%',
+                hoverOffset: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            const item = data.summary[ctx.dataIndex];
+                            return `${item.label}: ${item.count} (${item.percentage}%)`;
+                        }
+                    }
+                },
+                datalabels: {
+                    color: '#fff',
+                    font: { weight: 'bold', size: 13 },
+                    formatter: function(val, ctx) {
+                        const pct = data.summary[ctx.dataIndex].percentage;
+                        return pct >= 10 ? `${pct}%` : '';
+                    }
+                }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+
+    // Render legend
+    const legend = document.getElementById('sentimentLegend');
+    if (legend) {
+        legend.innerHTML = data.summary.map((s, idx) => 
+            `<div class="sentiment-legend-item">
+                <div class="sentiment-legend-dot" style="background:${bgColors[idx]}"></div>
+                <span>${s.label}: <strong>${s.count}</strong> (${s.percentage}%)</span>
+            </div>`
+        ).join('');
+    }
+}
+
+function renderSentimentSamples(data) {
+    const container = document.getElementById('sentimentSamples');
+    if (!container || !data.samples) return;
+
+    const sentimentConfig = {
+        'Positif': { icon: 'sentiment_satisfied', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+        'Saran Perbaikan': { icon: 'sentiment_dissatisfied', color: '#02C5BE', bg: 'rgba(2,197,190,0.12)' },
+        'Netral': { icon: 'sentiment_neutral', color: '#64748b', bg: 'rgba(100,116,139,0.12)' }
+    };
+
+    let html = '<div class="topic-accordion">';
+    for (const [label, samples] of Object.entries(data.samples)) {
+        const cfg = sentimentConfig[label] || sentimentConfig['Netral'];
+        html += `
+            <div class="topic-item">
+                <div class="topic-item-header" onclick="this.parentElement.classList.toggle('open')">
+                    <div class="topic-item-left">
+                        <div class="topic-item-icon" style="background:${cfg.bg}; color:${cfg.color}">
+                            <span class="material-icons-round">${cfg.icon}</span>
+                        </div>
+                        <span class="topic-item-name">${label}</span>
+                    </div>
+                    <div class="topic-item-right">
+                        <span class="topic-item-badge">${Math.min(5, samples.length)} contoh</span>
+                        <span class="material-icons-round topic-item-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="topic-item-body">
+                    <div class="topic-saran-list">
+                        ${samples.slice(0, 5).map(s => `
+                            <div class="topic-saran-item">
+                                <span class="material-icons-round">format_quote</span>
+                                <span>${s}</span>
+                            </div>`).join('')}
+                        <div class="topic-saran-item explore-more-btn" onclick="openSaranExplorer('${label}', 'ALL'); event.stopPropagation();">
+                            <span class="material-icons-round">open_in_new</span>
+                            <span>Lihat Seluruh Komentar "${label}" →</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+    }
+    html += `
+        <div style="margin-top: 14px;">
+            <button class="btn btn-outline" style="width: 100%; justify-content: center; border-color: var(--green-primary); color: var(--green-dark); padding: 10px;" onclick="openSaranExplorer('ALL', 'ALL')">
+                <span class="material-icons-round">forum</span>
+                <span>Eksplorasi Semua 903 Saran & Masukan →</span>
+            </button>
+        </div>`;
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderTopicBarChart(data) {
+    destroyChart('topicBarChart');
+    const el = document.getElementById('topicBarChart');
+    if (!el || !data.topics) return;
+
+    const topicIcons = {
+        'Aplikasi & Teknologi PSB': '#02C5BE',
+        'Pembayaran & Biaya': '#00897B',
+        'Pelayanan & Responsivitas': '#10b981',
+        'Fasilitas & Infrastruktur': '#0d9488',
+        'Kurikulum & Akademik': '#059669',
+        'Karakter & Kedisiplinan': '#14b8a6',
+        'Lainnya': '#64748b'
+    };
+
+    const topics = data.topics;
+    const colors = topics.map(t => topicIcons[t.topic] || '#94a3b8');
+
+    state.charts['topicBarChart'] = new Chart(el, {
+        type: 'bar',
+        data: {
+            labels: topics.map(t => t.topic),
+            datasets: [{
+                label: 'Jumlah Saran',
+                data: topics.map(t => t.count),
+                backgroundColor: colors,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'y',
+            plugins: {
+                legend: { display: false },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'end',
+                    color: function(ctx) { return colors[ctx.dataIndex]; },
+                    font: { weight: 'bold', size: 12 },
+                    formatter: function(val, ctx) {
+                        return `${val} (${topics[ctx.dataIndex].percentage}%)`;
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { display: false },
+                    border: { display: false }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { 
+                        font: { size: 12, weight: 600, family: "'Inter', sans-serif" },
+                        color: '#475569',
+                        padding: 12,
+                        autoSkip: false
+                    },
+                    border: { display: false }
+                }
+            },
+            layout: {
+                padding: { left: 16, right: 75 }
+            }
+        },
+        plugins: [ChartDataLabels]
+    });
+}
+
+function renderTopicAccordion(data) {
+    const container = document.getElementById('topicAccordion');
+    if (!container || !data.topics) return;
+
+    const topicConfig = {
+        'Aplikasi & Teknologi PSB': { icon: 'devices', color: '#02C5BE', bg: 'rgba(2,197,190,0.12)' },
+        'Pembayaran & Biaya': { icon: 'payments', color: '#00897B', bg: 'rgba(0,137,123,0.12)' },
+        'Pelayanan & Responsivitas': { icon: 'support_agent', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
+        'Fasilitas & Infrastruktur': { icon: 'apartment', color: '#0d9488', bg: 'rgba(13,148,136,0.12)' },
+        'Kurikulum & Akademik': { icon: 'school', color: '#059669', bg: 'rgba(5,150,105,0.12)' },
+        'Karakter & Kedisiplinan': { icon: 'psychology', color: '#14b8a6', bg: 'rgba(20,184,166,0.12)' },
+        'Lainnya': { icon: 'more_horiz', color: '#64748b', bg: 'rgba(100,116,139,0.12)' }
+    };
+
+    container.innerHTML = data.topics.map(t => {
+        const cfg = topicConfig[t.topic] || topicConfig['Lainnya'];
+        const samplesHTML = t.samples.map(s => 
+            `<div class="topic-saran-item">
+                <span class="material-icons-round">format_quote</span>
+                <span>${s}</span>
+            </div>`
+        ).join('') + `
+            <div class="topic-saran-item explore-more-btn" onclick="openSaranExplorer('ALL', '${t.topic.replace(/'/g, "\\'")}'); event.stopPropagation();">
+                <span class="material-icons-round">open_in_new</span>
+                <span>Lihat Semua ${t.count} Komentar Topik "${t.topic}" →</span>
+            </div>`;
+
+        return `
+            <div class="topic-item">
+                <div class="topic-item-header" onclick="this.parentElement.classList.toggle('open')">
+                    <div class="topic-item-left">
+                        <div class="topic-item-icon" style="background:${cfg.bg}; color:${cfg.color}">
+                            <span class="material-icons-round">${cfg.icon}</span>
+                        </div>
+                        <span class="topic-item-name">${t.topic}</span>
+                    </div>
+                    <div class="topic-item-right">
+                        <span class="topic-item-badge">${t.count} saran (${t.percentage}%)</span>
+                        <span class="material-icons-round topic-item-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="topic-item-body">
+                    <div class="topic-saran-list">${samplesHTML}</div>
+                </div>
+            </div>`;
+    }).join('');
+}
+
+// ============================================================
+// EKSPLORASI SEMUA SARAN & MASUKAN (903 KOMENTAR)
+// ============================================================
+let saranExplorerState = {
+    sentiment: 'ALL',
+    topic: 'ALL',
+    jenjang: 'ALL',
+    sekolah: 'ALL',
+    search: '',
+    currentPage: 1,
+    pageSize: 15
+};
+
+function updateSaranDropdownUI(groupId, value, defaultText) {
+    const group = document.getElementById(groupId);
+    if (!group) return;
+    const selectedEl = group.querySelector('.dropdown-selected');
+    const options = group.querySelectorAll('.dropdown-option');
+    let matchedText = defaultText;
+    options.forEach(o => {
+        const isMatch = o.dataset.value === value;
+        o.classList.toggle('selected', isMatch);
+        if (isMatch) matchedText = o.textContent;
+    });
+    if (selectedEl) selectedEl.textContent = matchedText;
+}
+
+function setupSaranCustomDropdown(groupId, stateKey, defaultText, onChange) {
+    const groupEl = document.getElementById(groupId);
+    if (!groupEl) return;
+    const dropdownOptions = groupEl.querySelector('.dropdown-options');
+    const selectedText = groupEl.querySelector('.dropdown-selected');
+    
+    groupEl.addEventListener('click', (e) => {
+        document.querySelectorAll('.saran-filter-row .filter-group').forEach(el => {
+            if (el !== groupEl) el.classList.remove('active');
+        });
+        groupEl.classList.toggle('active');
+    });
+
+    document.addEventListener('click', (e) => {
+        if (!groupEl.contains(e.target)) {
+            groupEl.classList.remove('active');
+        }
+    });
+
+    dropdownOptions.addEventListener('click', (e) => {
+        const option = e.target.closest('.dropdown-option');
+        if (option) {
+            e.stopPropagation();
+            const val = option.dataset.value;
+            const text = option.textContent;
+            selectedText.textContent = text;
+            saranExplorerState[stateKey] = val;
+            
+            dropdownOptions.querySelectorAll('.dropdown-option').forEach(o => o.classList.remove('selected'));
+            option.classList.add('selected');
+            
+            groupEl.classList.remove('active');
+            if (onChange) onChange(val);
+        }
+    });
+}
+
+function populateSaranOrgFilter() {
+    const orgContainer = document.getElementById('saranOrgOptions');
+    if (!orgContainer || !state.textMining || !state.textMining.sentiment || !state.textMining.sentiment.all_comments) return;
+
+    const uniqueCodes = [...new Set(state.textMining.sentiment.all_comments.map(c => c.sekolah).filter(Boolean))].sort();
+    let html = `<div class="dropdown-option ${saranExplorerState.sekolah === 'ALL' ? 'selected' : ''}" data-value="ALL">Semua Sekolah</div>`;
+    uniqueCodes.forEach(code => {
+        const name = getOrgName(code);
+        const display = code === name ? code : `${code} - ${name}`;
+        html += `<div class="dropdown-option ${saranExplorerState.sekolah === code ? 'selected' : ''}" data-value="${code}">${display}</div>`;
+    });
+    orgContainer.innerHTML = html;
+}
+
+function resetSaranFilters() {
+    saranExplorerState.sentiment = 'ALL';
+    saranExplorerState.topic = 'ALL';
+    saranExplorerState.jenjang = 'ALL';
+    saranExplorerState.sekolah = 'ALL';
+    saranExplorerState.search = '';
+    saranExplorerState.currentPage = 1;
+
+    updateSaranDropdownUI('saranFilterGroupTopic', 'ALL', 'Semua Topik');
+    updateSaranDropdownUI('saranFilterGroupJenjang', 'ALL', 'Semua Jenjang');
+    updateSaranDropdownUI('saranFilterGroupOrg', 'ALL', 'Semua Sekolah');
+
+    const searchInput = document.getElementById('saranSearchInput');
+    if (searchInput) searchInput.value = '';
+
+    document.querySelectorAll('.saran-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.sentiment === 'ALL');
+    });
+
+    renderSaranExplorerTable();
+}
+
+function switchDashboardSection(sectionId) {
+    document.querySelectorAll('.dashboard-section').forEach(s => {
+        s.classList.remove('active');
+        s.style.display = '';
+    });
+    const target = document.getElementById(sectionId);
+    if (target) {
+        target.classList.add('active');
+        target.style.display = '';
+    }
+    
+    const titles = {
+        'section-overview': {t: 'Overview', s: 'Ringkasan transisi dan retensi siswa'},
+        'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
+        'section-retention': {t: 'Retensi per Jenjang & Sekolah', s: 'Detail retensi berdasar jenjang dan unit sekolah'},
+        'section-survey': {t: 'Analisis Survei & Saran', s: 'Daftar masukan/saran dan unduh data'},
+        'section-saran-detail': {t: 'Eksplorasi Semua Saran & Masukan (903 Komentar)', s: 'Filter, cari kata kunci, dan telusuri seluruh komentar survei per sekolah'}
+    };
+
+    const h = document.getElementById('topbarPageTitle');
+    const sub = document.getElementById('topbarPageSubtitle');
+    if (h && titles[sectionId]) h.textContent = titles[sectionId].t;
+    if (sub && titles[sectionId]) sub.textContent = titles[sectionId].s;
+    
+    const isSurvey = (sectionId === 'section-survey' || sectionId === 'section-saran-detail');
+    const globalFiltersEl = document.getElementById('globalFiltersBar');
+    const surveyActionsEl = document.getElementById('surveyTopbarActions');
+    if (globalFiltersEl) globalFiltersEl.style.display = isSurvey ? 'none' : 'flex';
+    if (surveyActionsEl) surveyActionsEl.style.display = isSurvey ? 'flex' : 'none';
+
+    document.querySelectorAll('.nav-item').forEach(item => {
+        if (item.dataset.target === sectionId) {
+            item.classList.add('active');
+        } else if (sectionId === 'section-saran-detail' && item.dataset.target === 'section-survey') {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+
+    if (sectionId === 'section-survey' && state.textMining && state.textMining.wordFreq) {
+        setTimeout(() => {
+            renderWordCloud(state.textMining.wordFreq);
+        }, 50);
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openSaranExplorer(sentimentVal = 'ALL', topicVal = 'ALL', searchVal = '', sekolahVal = 'ALL') {
+    saranExplorerState.sentiment = sentimentVal;
+    saranExplorerState.topic = topicVal;
+    saranExplorerState.jenjang = 'ALL';
+    saranExplorerState.sekolah = sekolahVal || 'ALL';
+    saranExplorerState.search = searchVal || '';
+    saranExplorerState.currentPage = 1;
+
+    updateSaranDropdownUI('saranFilterGroupTopic', topicVal, 'Semua Topik');
+    updateSaranDropdownUI('saranFilterGroupJenjang', 'ALL', 'Semua Jenjang');
+    updateSaranDropdownUI('saranFilterGroupOrg', sekolahVal || 'ALL', 'Semua Sekolah');
+
+    const searchInput = document.getElementById('saranSearchInput');
+    if (searchInput) searchInput.value = searchVal || '';
+
+    // Highlight sentiment tab
+    document.querySelectorAll('.saran-tab').forEach(tab => {
+        if (tab.dataset.sentiment === sentimentVal) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+
+    switchDashboardSection('section-saran-detail');
+    renderSaranExplorerTable();
+}
+
+function filterSaranBySentiment(sentimentVal) {
+    saranExplorerState.sentiment = sentimentVal;
+    saranExplorerState.currentPage = 1;
+    document.querySelectorAll('.saran-tab').forEach(tab => {
+        if (tab.dataset.sentiment === sentimentVal) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+    renderSaranExplorerTable();
+}
+
+function filterSaranByTopic(topicVal) {
+    saranExplorerState.topic = topicVal;
+    saranExplorerState.currentPage = 1;
+    renderSaranExplorerTable();
+}
+
+function filterSaranByJenjang(jenjangVal) {
+    saranExplorerState.jenjang = jenjangVal;
+    saranExplorerState.currentPage = 1;
+    renderSaranExplorerTable();
+}
+
+function filterSaranBySekolah(sekolahVal) {
+    saranExplorerState.sekolah = sekolahVal;
+    saranExplorerState.currentPage = 1;
+    renderSaranExplorerTable();
+}
+
+function filterSaranBySearch(searchVal) {
+    saranExplorerState.search = searchVal;
+    saranExplorerState.currentPage = 1;
+    renderSaranExplorerTable();
+}
+
+function changeSaranPageSize(newSize) {
+    saranExplorerState.pageSize = parseInt(newSize, 10);
+    saranExplorerState.currentPage = 1;
+    renderSaranExplorerTable();
+}
+
+function changeSaranPage(delta) {
+    const allItems = getFilteredSaranItems();
+    const totalPages = Math.ceil(allItems.length / saranExplorerState.pageSize) || 1;
+    const newPage = saranExplorerState.currentPage + delta;
+    if (newPage >= 1 && newPage <= totalPages) {
+        saranExplorerState.currentPage = newPage;
+        renderSaranExplorerTable();
+    }
+}
+
+function getFilteredSaranItems() {
+    if (!state.textMining || !state.textMining.sentiment || !state.textMining.sentiment.all_comments) {
+        return [];
+    }
+    const all = state.textMining.sentiment.all_comments;
+    return all.filter(item => {
+        // Sentiment filter
+        if (saranExplorerState.sentiment !== 'ALL' && item.sentiment !== saranExplorerState.sentiment) {
+            return false;
+        }
+        // Topic filter
+        if (saranExplorerState.topic !== 'ALL' && item.topic !== saranExplorerState.topic) {
+            return false;
+        }
+        // Jenjang filter (flexible prefix/substring match so KB matches KB-A, KB-B, etc.)
+        if (saranExplorerState.jenjang !== 'ALL') {
+            const jenVal = String(item.jenjang || '').toUpperCase();
+            const filterVal = saranExplorerState.jenjang.toUpperCase();
+            if (!jenVal.startsWith(filterVal) && !jenVal.includes(filterVal)) {
+                return false;
+            }
+        }
+        // Sekolah / Organization Code filter
+        if (saranExplorerState.sekolah !== 'ALL') {
+            if (item.sekolah !== saranExplorerState.sekolah) {
+                return false;
+            }
+        }
+        // Search filter
+        if (saranExplorerState.search.trim() !== '') {
+            const query = saranExplorerState.search.trim().toLowerCase();
+            const textMatch = (item.text || '').toLowerCase().includes(query);
+            const topicMatch = (item.topic || '').toLowerCase().includes(query);
+            const sekolahMatch = (item.sekolah || '').toLowerCase().includes(query);
+            if (!textMatch && !topicMatch && !sekolahMatch) return false;
+        }
+        return true;
+    });
+}
+
+function renderSaranExplorerTable() {
+    const tbody = document.getElementById('saranExplorerTableBody');
+    if (!tbody) return;
+
+    const filtered = getFilteredSaranItems();
+    const allTotal = state.textMining?.sentiment?.all_comments?.length || 903;
+    
+    // Update count title
+    const tableTitleEl = document.getElementById('saranTableTitle');
+    if (tableTitleEl) {
+        tableTitleEl.textContent = `Daftar Saran & Masukan (${filtered.length} dari ${allTotal})`;
+    }
+
+    const pageSize = saranExplorerState.pageSize;
+    const totalPages = Math.ceil(filtered.length / pageSize) || 1;
+    const page = Math.min(saranExplorerState.currentPage, totalPages);
+    saranExplorerState.currentPage = page;
+
+    const startIdx = (page - 1) * pageSize;
+    const endIdx = Math.min(startIdx + pageSize, filtered.length);
+    const pageItems = filtered.slice(startIdx, endIdx);
+
+    if (pageItems.length === 0) {
+        tbody.innerHTML = `<tr>
+            <td colspan="5" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                <span class="material-icons-round" style="font-size: 36px; display: block; margin-bottom: 8px; opacity: 0.5;">search_off</span>
+                Tidak ada komentar yang cocok dengan filter yang dipilih.
+            </td>
+        </tr>`;
+    } else {
+        tbody.innerHTML = pageItems.map((item, idx) => {
+            const rowNo = startIdx + idx + 1;
+            const sentimenClass = item.sentiment === 'Positif' ? 'positif' : (item.sentiment === 'Saran Perbaikan' ? 'perbaikan' : 'netral');
+            const sentimenIcon = item.sentiment === 'Positif' ? 'sentiment_satisfied' : (item.sentiment === 'Saran Perbaikan' ? 'sentiment_dissatisfied' : 'sentiment_neutral');
+            
+            return `<tr>
+                <td style="text-align: center; color: var(--text-muted); font-weight: 600;">${rowNo}</td>
+                <td style="line-height: 1.5; color: var(--text-primary);">
+                    <div style="display: flex; gap: 8px; align-items: flex-start;">
+                        <span class="material-icons-round" style="font-size: 16px; color: var(--green-primary); margin-top: 2px;">format_quote</span>
+                        <span>${item.text}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="saran-badge-sentimen ${sentimenClass}">
+                        <span class="material-icons-round" style="font-size: 14px;">${sentimenIcon}</span>
+                        <span>${item.sentiment}</span>
+                    </span>
+                </td>
+                <td>
+                    <span class="saran-badge-topic">
+                        <span class="material-icons-round" style="font-size: 14px; color: var(--green-primary);">label</span>
+                        <span>${item.topic || 'Lainnya'}</span>
+                    </span>
+                </td>
+                <td style="text-align: center;">
+                    <span class="saran-badge-jenjang" title="${item.sekolah ? getOrgName(item.sekolah) : ''}">${(item.sekolah ? getOrgName(item.sekolah) : '') + (item.jenjang ? ' (' + item.jenjang + ')' : '') || '-'}</span>
+                </td>
+            </tr>`;
+        }).join('');
+    }
+
+    // Update pagination info
+    const infoEl = document.getElementById('saranTableInfo');
+    const indicatorEl = document.getElementById('saranPageIndicator');
+    const prevBtn = document.getElementById('saranPrevBtn');
+    const nextBtn = document.getElementById('saranNextBtn');
+
+    if (infoEl) {
+        infoEl.textContent = filtered.length === 0 ? 'Menampilkan 0 komentar' : `Menampilkan ${startIdx + 1}-${endIdx} dari ${filtered.length} komentar`;
+    }
+    if (indicatorEl) {
+        indicatorEl.textContent = `Halaman ${page} dari ${totalPages}`;
+    }
+    if (prevBtn) {
+        prevBtn.disabled = page <= 1;
+        prevBtn.style.opacity = page <= 1 ? '0.4' : '1';
+    }
+    if (nextBtn) {
+        nextBtn.disabled = page >= totalPages;
+        nextBtn.style.opacity = page >= totalPages ? '0.4' : '1';
+    }
+}
+
+function exportAllCommentsExcel() {
+    const filtered = getFilteredSaranItems();
+    if (!filtered || filtered.length === 0) {
+        alert('Tidak ada data saran & masukan yang dapat diunduh');
+        return;
+    }
+    const headers = ['No', 'Isi Saran & Masukan', 'Sentimen', 'Topik', 'Jenjang', 'Sekolah'];
+    const rows = filtered.map((item, idx) => [
+        idx + 1,
+        `"${String(item.text || '').replace(/"/g, '""')}"`,
+        `"${item.sentiment || ''}"`,
+        `"${item.topic || ''}"`,
+        `"${item.jenjang || ''}"`,
+        `"${item.sekolah || ''}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.setAttribute('download', `Saran_Masukan_PSB_Lengkap_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 // Data Aggregation
@@ -1817,6 +2569,41 @@ function exportSurveyToExcel() {
             const ws4 = XLSX.utils.json_to_sheet(likertRows);
             XLSX.utils.book_append_sheet(wb, ws4, 'Kepuasan Layanan');
 
+            // Sheet 5: Sentimen Saran (Text Mining)
+            if (state.textMining && state.textMining.sentiment) {
+                const sentRows = state.textMining.sentiment.summary.map((s, i) => ({
+                    'No': i + 1,
+                    'Klasifikasi Sentimen': s.label,
+                    'Jumlah Responden': s.count,
+                    'Persentase (%)': s.percentage
+                }));
+                const ws5 = XLSX.utils.json_to_sheet(sentRows);
+                XLSX.utils.book_append_sheet(wb, ws5, 'Sentimen Saran');
+            }
+
+            // Sheet 6: Topik Saran (Text Mining)
+            if (state.textMining && state.textMining.topics) {
+                const topikRows = state.textMining.topics.topics.map((t, i) => ({
+                    'No': i + 1,
+                    'Topik': t.topic,
+                    'Jumlah Saran': t.count,
+                    'Persentase (%)': t.percentage
+                }));
+                const ws6 = XLSX.utils.json_to_sheet(topikRows);
+                XLSX.utils.book_append_sheet(wb, ws6, 'Topik Saran');
+            }
+
+            // Sheet 7: Frekuensi Kata (Text Mining)
+            if (state.textMining && state.textMining.wordFreq) {
+                const wordRows = state.textMining.wordFreq.top_words.slice(0, 50).map((w, i) => ({
+                    'No': i + 1,
+                    'Kata': w.word,
+                    'Frekuensi': w.count
+                }));
+                const ws7 = XLSX.utils.json_to_sheet(wordRows);
+                XLSX.utils.book_append_sheet(wb, ws7, 'Frekuensi Kata');
+            }
+
             XLSX.writeFile(wb, 'Laporan_Survei_PSB_Petra.xlsx');
             showToast('File Excel berhasil diunduh (.xlsx)', 'success');
         } else {
@@ -1966,6 +2753,27 @@ function generateSampleSurveyData() {
         }
     };
 }
+
+// --- Survey Topbar Download Menu Handlers ---
+function toggleSurveyDownloadMenu(event) {
+    if (event) event.stopPropagation();
+    const menu = document.getElementById('surveyDownloadMenu');
+    if (!menu) return;
+    const isVisible = menu.style.display === 'block';
+    menu.style.display = isVisible ? 'none' : 'block';
+}
+
+function hideSurveyDownloadMenu() {
+    const menu = document.getElementById('surveyDownloadMenu');
+    if (menu) menu.style.display = 'none';
+}
+
+document.addEventListener('click', function(e) {
+    const actionsContainer = document.getElementById('surveyTopbarActions');
+    if (actionsContainer && !actionsContainer.contains(e.target)) {
+        hideSurveyDownloadMenu();
+    }
+});
 
 // Start
 document.addEventListener('DOMContentLoaded', init);

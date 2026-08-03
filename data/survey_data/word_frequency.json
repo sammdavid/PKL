@@ -1,0 +1,448 @@
+{
+  "total_tokens": 5519,
+  "unique_tokens": 1723,
+  "top_words": [
+    {
+      "word": "orang",
+      "count": 61
+    },
+    {
+      "word": "pembayaran",
+      "count": 61
+    },
+    {
+      "word": "ditingkatkan",
+      "count": 59
+    },
+    {
+      "word": "uang",
+      "count": 56
+    },
+    {
+      "word": "tua",
+      "count": 56
+    },
+    {
+      "word": "bagus",
+      "count": 52
+    },
+    {
+      "word": "semoga",
+      "count": 49
+    },
+    {
+      "word": "terus",
+      "count": 47
+    },
+    {
+      "word": "informasi",
+      "count": 47
+    },
+    {
+      "word": "mudah",
+      "count": 34
+    },
+    {
+      "word": "secara",
+      "count": 34
+    },
+    {
+      "word": "saja",
+      "count": 33
+    },
+    {
+      "word": "sehingga",
+      "count": 33
+    },
+    {
+      "word": "semakin",
+      "count": 33
+    },
+    {
+      "word": "murid",
+      "count": 30
+    },
+    {
+      "word": "pengembangan",
+      "count": 28
+    },
+    {
+      "word": "tingkatkan",
+      "count": 28
+    },
+    {
+      "word": "ortu",
+      "count": 27
+    },
+    {
+      "word": "sistem",
+      "count": 27
+    },
+    {
+      "word": "masuk",
+      "count": 27
+    },
+    {
+      "word": "fasilitas",
+      "count": 27
+    },
+    {
+      "word": "bagi",
+      "count": 26
+    },
+    {
+      "word": "menjadi",
+      "count": 26
+    },
+    {
+      "word": "admin",
+      "count": 25
+    },
+    {
+      "word": "jelas",
+      "count": 24
+    },
+    {
+      "word": "potongan",
+      "count": 24
+    },
+    {
+      "word": "tetap",
+      "count": 24
+    },
+    {
+      "word": "hanya",
+      "count": 23
+    },
+    {
+      "word": "langsung",
+      "count": 22
+    },
+    {
+      "word": "waktu",
+      "count": 22
+    },
+    {
+      "word": "lbh",
+      "count": 21
+    },
+    {
+      "word": "up",
+      "count": 21
+    },
+    {
+      "word": "tahun",
+      "count": 21
+    },
+    {
+      "word": "pelayanan",
+      "count": 21
+    },
+    {
+      "word": "kedepannya",
+      "count": 21
+    },
+    {
+      "word": "guru",
+      "count": 21
+    },
+    {
+      "word": "kegiatan",
+      "count": 21
+    },
+    {
+      "word": "seragam",
+      "count": 21
+    },
+    {
+      "word": "dokumen",
+      "count": 20
+    },
+    {
+      "word": "kualitas",
+      "count": 20
+    },
+    {
+      "word": "dipertahankan",
+      "count": 20
+    },
+    {
+      "word": "berkembang",
+      "count": 20
+    },
+    {
+      "word": "maju",
+      "count": 19
+    },
+    {
+      "word": "pihak",
+      "count": 19
+    },
+    {
+      "word": "membantu",
+      "count": 19
+    },
+    {
+      "word": "diberikan",
+      "count": 19
+    },
+    {
+      "word": "orangtua",
+      "count": 18
+    },
+    {
+      "word": "melalui",
+      "count": 18
+    },
+    {
+      "word": "cepat",
+      "count": 18
+    },
+    {
+      "word": "biaya",
+      "count": 18
+    },
+    {
+      "word": "info",
+      "count": 18
+    },
+    {
+      "word": "memudahkan",
+      "count": 17
+    },
+    {
+      "word": "selalu",
+      "count": 17
+    },
+    {
+      "word": "sebaiknya",
+      "count": 17
+    },
+    {
+      "word": "seperti",
+      "count": 17
+    },
+    {
+      "word": "tuhan",
+      "count": 17
+    },
+    {
+      "word": "prestasi",
+      "count": 16
+    },
+    {
+      "word": "website",
+      "count": 16
+    },
+    {
+      "word": "memberikan",
+      "count": 16
+    },
+    {
+      "word": "promosi",
+      "count": 16
+    },
+    {
+      "word": "melakukan",
+      "count": 15
+    },
+    {
+      "word": "jangan",
+      "count": 15
+    },
+    {
+      "word": "kendala",
+      "count": 15
+    },
+    {
+      "word": "wali",
+      "count": 15
+    },
+    {
+      "word": "akademik",
+      "count": 15
+    },
+    {
+      "word": "spp",
+      "count": 15
+    },
+    {
+      "word": "pendidikan",
+      "count": 14
+    },
+    {
+      "word": "sendiri",
+      "count": 14
+    },
+    {
+      "word": "calon",
+      "count": 14
+    },
+    {
+      "word": "memberkati",
+      "count": 14
+    },
+    {
+      "word": "diskon",
+      "count": 14
+    },
+    {
+      "word": "non",
+      "count": 14
+    },
+    {
+      "word": "menggunakan",
+      "count": 13
+    },
+    {
+      "word": "mau",
+      "count": 13
+    },
+    {
+      "word": "masih",
+      "count": 13
+    },
+    {
+      "word": "link",
+      "count": 13
+    },
+    {
+      "word": "tentang",
+      "count": 12
+    },
+    {
+      "word": "upload",
+      "count": 12
+    },
+    {
+      "word": "cara",
+      "count": 12
+    },
+    {
+      "word": "admission",
+      "count": 12
+    }
+  ],
+  "top_bigrams": [
+    {
+      "bigram": "orang tua",
+      "count": 52
+    },
+    {
+      "bigram": "uang pengembangan",
+      "count": 23
+    },
+    {
+      "bigram": "pembayaran uang",
+      "count": 12
+    },
+    {
+      "bigram": "tuhan yesus",
+      "count": 10
+    },
+    {
+      "bigram": "semoga kedepannya",
+      "count": 10
+    },
+    {
+      "bigram": "wali murid",
+      "count": 10
+    },
+    {
+      "bigram": "yesus memberkati",
+      "count": 9
+    },
+    {
+      "bigram": "pengembangan uang",
+      "count": 8
+    },
+    {
+      "bigram": "non akademik",
+      "count": 7
+    },
+    {
+      "bigram": "pengukuran seragam",
+      "count": 7
+    },
+    {
+      "bigram": "semoga semakin",
+      "count": 6
+    },
+    {
+      "bigram": "terus ditingkatkan",
+      "count": 6
+    },
+    {
+      "bigram": "upload dokumen",
+      "count": 5
+    },
+    {
+      "bigram": "terus berinovasi",
+      "count": 5
+    },
+    {
+      "bigram": "tetap dipertahankan",
+      "count": 5
+    },
+    {
+      "bigram": "secara keseluruhan",
+      "count": 5
+    },
+    {
+      "bigram": "potongan uang",
+      "count": 5
+    },
+    {
+      "bigram": "tua murid",
+      "count": 5
+    },
+    {
+      "bigram": "semakin maju",
+      "count": 5
+    },
+    {
+      "bigram": "hanya saja",
+      "count": 5
+    },
+    {
+      "bigram": "tuhan memberkati",
+      "count": 5
+    },
+    {
+      "bigram": "semakin berkembang",
+      "count": 5
+    },
+    {
+      "bigram": "surat pernyataan",
+      "count": 4
+    },
+    {
+      "bigram": "tombol simpan",
+      "count": 4
+    },
+    {
+      "bigram": "cicilan up",
+      "count": 4
+    },
+    {
+      "bigram": "pembayaran nominal",
+      "count": 4
+    },
+    {
+      "bigram": "nominal diisi",
+      "count": 4
+    },
+    {
+      "bigram": "diisi sendiri",
+      "count": 4
+    },
+    {
+      "bigram": "membantu orang",
+      "count": 4
+    },
+    {
+      "bigram": "so far",
+      "count": 4
+    }
+  ]
+}

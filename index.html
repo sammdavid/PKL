@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Material Icons Round -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=39">
+    <link rel="stylesheet" href="style.css?v=42">
 </head>
 <body>
     <!-- Loading Overlay -->
@@ -49,6 +49,10 @@
                     <li class="nav-item" data-target="section-details">
                         <span class="material-icons-round">school</span>
                         <span>Detail Sekolah</span>
+                    </li>
+                    <li class="nav-item" data-target="section-conclusion">
+                        <span class="material-icons-round">summarize</span>
+                        <span>Kesimpulan</span>
                     </li>
                 </ul>
             </nav>
@@ -210,6 +214,7 @@
                             <div class="chart-body">
                                 <canvas id="overviewTrendChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightOverviewTrend"></div>
                         </div>
                         <div class="chart-card">
                             <div class="chart-header">
@@ -218,6 +223,7 @@
                             <div class="chart-body">
                                 <canvas id="overviewDonutChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightOverviewDonut"></div>
                         </div>
                     </div>
                 </section>
@@ -231,6 +237,7 @@
                         <div class="chart-body chart-body-large">
                             <canvas id="trendLineChart"></canvas>
                         </div>
+                        <div class="chart-insight" id="insightTrendLine"></div>
                     </div>
                     <div class="charts-row split-1-1">
                         <div class="chart-card">
@@ -240,6 +247,7 @@
                             <div class="chart-body">
                                 <canvas id="keluarJenjangChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightKeluarJenjang"></div>
                         </div>
                         <div class="chart-card">
                             <div class="chart-header">
@@ -248,6 +256,7 @@
                             <div class="chart-body">
                                 <canvas id="lanjutJenjangChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightLanjutJenjang"></div>
                         </div>
                     </div>
                 </section>
@@ -262,6 +271,7 @@
                             <div class="chart-body">
                                 <canvas id="alasanKeluarChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightAlasanKeluar"></div>
                         </div>
                         <div class="chart-card border-top-green">
                             <div class="chart-header header-green">
@@ -270,6 +280,7 @@
                             <div class="chart-body">
                                 <canvas id="alasanLanjutChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightAlasanLanjut"></div>
                         </div>
                     </div>
                     <div class="charts-row split-1-1" style="margin-top: 24px;">
@@ -280,6 +291,7 @@
                             <div class="chart-body">
                                 <canvas id="sumberInfoChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightSumberInfo"></div>
                         </div>
                         <div class="chart-card">
                             <div class="chart-header">
@@ -288,6 +300,7 @@
                             <div class="chart-body">
                                 <canvas id="kepuasanLayananChart"></canvas>
                             </div>
+                            <div class="chart-insight" id="insightKepuasanLayanan"></div>
                         </div>
                     </div>
 
@@ -319,12 +332,14 @@
                                     <canvas id="sentimentDonutChart"></canvas>
                                 </div>
                                 <div class="sentiment-legend" id="sentimentLegend"></div>
+                                <div class="chart-insight" id="insightSentimentDonut"></div>
                             </div>
                             <div class="tm-chart-card">
                                 <h3>Distribusi Topik Saran</h3>
                                 <div class="chart-body">
                                     <canvas id="topicBarChart"></canvas>
                                 </div>
+                                <div class="chart-insight" id="insightTopicBar"></div>
                             </div>
                         </div>
 
@@ -547,10 +562,12 @@
                         <div class="detail-chart-card" style="margin-top: 24px;">
                             <h3>Perbandingan Retention Rate antar Cabang</h3>
                             <canvas id="schoolComparisonChart"></canvas>
+                            <div class="chart-insight" id="insightSchoolComparison"></div>
                         </div>
                         <div class="detail-chart-card" style="margin-top: 24px;">
                             <h3>Tren Retention Rate per Tahun Ajaran</h3>
                             <canvas id="jenjangYearlyTrendChart"></canvas>
+                            <div class="chart-insight" id="insightJenjangYearlyTrend"></div>
                         </div>
                     </div>
 
@@ -622,6 +639,7 @@
                         <div class="detail-chart-card" style="margin-bottom: 24px;">
                             <h3>Tren Retention Rate per Tahun Ajaran</h3>
                             <canvas id="schoolYearlyTrendChart"></canvas>
+                            <div class="chart-insight" id="insightSchoolYearlyTrend"></div>
                         </div>
 
                         <!-- Charts Row -->
@@ -629,10 +647,12 @@
                             <div class="detail-chart-card">
                                 <h3>Retention Rate per Kelas</h3>
                                 <canvas id="classRetentionChart"></canvas>
+                                <div class="chart-insight" id="insightClassRetention"></div>
                             </div>
                             <div class="detail-chart-card">
                                 <h3>Distribusi Siswa Lanjut vs Keluar</h3>
                                 <canvas id="classDistributionChart"></canvas>
+                                <div class="chart-insight" id="insightClassDistribution"></div>
                             </div>
                         </div>
 
@@ -677,6 +697,165 @@
                         </div>
                     </div>
                 </section>
+
+                <!-- ==========================================
+                     SECTION: KESIMPULAN
+                     ========================================== -->
+                <section id="section-conclusion" class="dashboard-section">
+
+                    <!-- Info Banner (same pattern as other sections) -->
+                    <div class="info-banner" style="background: linear-gradient(90deg, rgba(2,197,190,0.08), rgba(2,197,190,0.03)); border-color: rgba(2,197,190,0.3); border-left-color: var(--green-primary); color: var(--text-primary); margin-bottom: 28px;">
+                        <span class="material-icons-round" style="color: var(--green-primary); flex-shrink:0;">auto_awesome</span>
+                        <div>
+                            <p style="font-weight:600; color: var(--text-primary); margin-bottom:2px;">Sintesis Otomatis Berbasis Data</p>
+                            <p style="font-size:13px; color: var(--text-secondary); font-weight:400;">Kesimpulan ini dihasilkan dari keseluruhan data tanpa filter — mencakup semua periode, semua jenjang, dan semua cabang. Badge: <strong id="conclusionBadgePeriod" style="color:var(--green-primary)">—</strong> &nbsp;·&nbsp; <strong id="conclusionBadgeSekolah" style="color:var(--green-primary)">—</strong></p>
+                        </div>
+                    </div>
+
+                    <!-- Snapshot KPI — reuse existing kpi-grid / kpi-card pattern -->
+                    <div class="kpi-grid" style="margin-bottom:28px;">
+                        <div class="kpi-card card-green">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Retention Rate Global</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">verified</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="cncRetentionRate" class="kpi-value" style="color: var(--green-bright);">—</h2>
+                                <div class="kpi-trend" id="cncRetentionTrend">
+                                    <span class="material-icons-round trend-icon">trending_flat</span>
+                                    <span class="trend-text">Memuat...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-neutral">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Total Siswa Dianalisis</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">groups</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="cncTotalSiswa" class="kpi-value">—</h2>
+                                <div class="kpi-trend" id="cncPeriodeCount">
+                                    <span class="material-icons-round trend-icon">calendar_today</span>
+                                    <span class="trend-text">Memuat...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-green-alt">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Jenjang Terbaik</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">workspace_premium</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="cncBestJenjang" class="kpi-value">—</h2>
+                                <div class="kpi-trend positive" id="cncBestJenjangRate">
+                                    <span class="material-icons-round trend-icon">trending_up</span>
+                                    <span class="trend-text">Memuat...</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="kpi-card card-yellow">
+                            <div class="kpi-header">
+                                <span class="kpi-title">Jenjang Perlu Perhatian</span>
+                                <div class="kpi-icon-wrapper"><span class="material-icons-round">warning_amber</span></div>
+                            </div>
+                            <div class="kpi-body">
+                                <h2 id="cncWorstJenjang" class="kpi-value">—</h2>
+                                <div class="kpi-trend negative" id="cncWorstJenjangRate">
+                                    <span class="material-icons-round trend-icon">trending_down</span>
+                                    <span class="trend-text">Memuat...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3-col Findings Row — reuse chart-card pattern -->
+                    <div class="conclusion-findings-row">
+                        <!-- Area Perhatian -->
+                        <div class="chart-card conclusion-card danger">
+                            <div class="chart-header" style="margin-bottom:16px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="conclusion-card-icon">
+                                        <span class="material-icons-round">report_problem</span>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size:16px;">Area Perhatian</h3>
+                                        <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Temuan yang memerlukan tindak lanjut</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="conclusion-finding-list" id="conclusionDangerList">
+                                <div class="conclusion-empty">
+                                    <span class="material-icons-round">hourglass_empty</span>
+                                    Memuat data...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Kekuatan Utama -->
+                        <div class="chart-card conclusion-card success">
+                            <div class="chart-header" style="margin-bottom:16px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="conclusion-card-icon">
+                                        <span class="material-icons-round">verified</span>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size:16px;">Kekuatan Utama</h3>
+                                        <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Aspek yang sudah berjalan baik</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="conclusion-finding-list" id="conclusionSuccessList">
+                                <div class="conclusion-empty">
+                                    <span class="material-icons-round">hourglass_empty</span>
+                                    Memuat data...
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suara Orang Tua -->
+                        <div class="chart-card conclusion-card voice">
+                            <div class="chart-header" style="margin-bottom:16px;">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <div class="conclusion-card-icon">
+                                        <span class="material-icons-round">record_voice_over</span>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size:16px;">Suara Orang Tua</h3>
+                                        <p style="font-size:12px; color:var(--text-muted); margin-top:2px;">Dari survei &amp; analisis sentimen</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="conclusion-finding-list" id="conclusionVoiceList">
+                                <div class="conclusion-empty">
+                                    <span class="material-icons-round">hourglass_empty</span>
+                                    Memuat data...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rekomendasi — full-width chart-card -->
+                    <div class="chart-card conclusion-reco-card" style="margin-top:0;">
+                        <div class="chart-header" style="margin-bottom:20px;">
+                            <div style="display:flex; align-items:center; gap:14px;">
+                                <div class="conclusion-reco-icon">
+                                    <span class="material-icons-round">tips_and_updates</span>
+                                </div>
+                                <div>
+                                    <h3>Rekomendasi Tindak Lanjut</h3>
+                                    <p style="font-size:13px; color:var(--text-muted); margin-top:3px;"><span id="conclusionRecoCount">—</span> rekomendasi berdasarkan temuan data</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="conclusion-reco-list" id="conclusionRecoList">
+                            <div class="conclusion-empty">
+                                <span class="material-icons-round">hourglass_empty</span>
+                                Memuat rekomendasi...
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </main>
     </div>
@@ -686,6 +865,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/wordcloud@1.2.2/src/wordcloud2.js"></script>
-    <script src="script.js?v=42"></script>
+    <script src="script.js?v=47"></script>
 </body>
 </html>

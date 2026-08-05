@@ -2337,6 +2337,62 @@ body {
     color: var(--green-dark);
 }
 
+/* ============================================================
+   CHART INSIGHT — Dynamic Interpretation Below Charts
+   ============================================================ */
+.chart-insight {
+    margin-top: 14px;
+    padding: 12px 16px 12px 44px;
+    background: rgba(2, 197, 190, 0.05);
+    border-left: 3px solid #02C5BE;
+    border-radius: 0 10px 10px 0;
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    position: relative;
+    animation: insightFadeIn 0.4s ease-out;
+}
+
+.chart-insight::before {
+    content: 'auto_awesome';
+    font-family: 'Material Icons Round';
+    position: absolute;
+    left: 14px;
+    top: 12px;
+    font-size: 16px;
+    color: #02C5BE;
+    opacity: 0.8;
+}
+
+.chart-insight:empty {
+    display: none;
+}
+
+.chart-insight strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.chart-insight .insight-highlight {
+    color: #00897B;
+    font-weight: 700;
+}
+
+.chart-insight .insight-warn {
+    color: #e65100;
+    font-weight: 600;
+}
+
+.chart-insight .insight-neutral {
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+@keyframes insightFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 @media (max-width: 768px) {
     .tm-charts-row {
         grid-template-columns: 1fr;
@@ -2349,5 +2405,173 @@ body {
         flex-direction: column;
         align-items: stretch;
     }
+    .chart-insight {
+        font-size: 12px;
+        padding: 10px 14px 10px 38px;
+    }
+    .chart-insight::before {
+        left: 12px;
+        font-size: 14px;
+    }
 }
 
+/* ============================================================
+   SECTION KESIMPULAN — Conclusion & Recommendations
+   Only adds what's needed on top of existing kpi-card / chart-card patterns
+   ============================================================ */
+
+/* 3-column findings row using chart-card base */
+.conclusion-findings-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+/* Accent top-borders on finding cards (chart-card base already handles bg, shadow, radius) */
+.conclusion-card.danger  { border-top: 3px solid #ef4444; }
+.conclusion-card.success { border-top: 3px solid #059669; }
+.conclusion-card.voice   { border-top: 3px solid var(--green-primary); }
+
+/* Icon backgrounds */
+.conclusion-card-icon {
+    width: 42px; height: 42px;
+    border-radius: 13px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.conclusion-card-icon .material-icons-round { font-size: 22px; }
+.conclusion-card.danger  .conclusion-card-icon { background: rgba(239,68,68,0.1); }
+.conclusion-card.danger  .conclusion-card-icon .material-icons-round { color: #ef4444; }
+.conclusion-card.success .conclusion-card-icon { background: rgba(5,150,105,0.1); }
+.conclusion-card.success .conclusion-card-icon .material-icons-round { color: #059669; }
+.conclusion-card.voice   .conclusion-card-icon { background: rgba(2,197,190,0.12); }
+.conclusion-card.voice   .conclusion-card-icon .material-icons-round { color: var(--green-primary); }
+
+/* Reco card icon */
+.conclusion-reco-icon {
+    width: 44px; height: 44px;
+    border-radius: 13px;
+    background: rgba(245,158,11,0.1);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+}
+.conclusion-reco-icon .material-icons-round { color: #f59e0b; font-size: 22px; }
+.conclusion-reco-card { border-top: 3px solid #f59e0b; }
+
+/* Finding list items */
+.conclusion-finding-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.conclusion-finding-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+.fi-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+}
+.conclusion-card.danger  .fi-dot { background: #ef4444; }
+.conclusion-card.success .fi-dot { background: #059669; }
+.conclusion-card.voice   .fi-dot { background: var(--green-primary); }
+.conclusion-finding-item strong { color: var(--text-primary); }
+
+/* Quote inside voice card */
+.conclusion-quote {
+    background: rgba(2,197,190,0.06);
+    border-left: 3px solid var(--green-primary);
+    border-radius: 0 8px 8px 0;
+    padding: 10px 14px;
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-top: 4px;
+}
+.conclusion-quote::before {
+    content: '\201C';
+    font-size: 22px;
+    color: var(--green-primary);
+    font-style: normal;
+    line-height: 0;
+    vertical-align: -7px;
+    margin-right: 3px;
+}
+
+/* Sentiment mini-bar */
+.conclusion-sentiment-bar {
+    display: flex;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 8px;
+    margin-top: 4px;
+}
+.conclusion-sentiment-bar div { height: 100%; transition: width 0.6s ease; }
+
+/* Reco list */
+.conclusion-reco-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.conclusion-reco-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    background: rgba(245,158,11,0.05);
+    border-radius: 12px;
+    border: 1px solid rgba(245,158,11,0.15);
+    transition: background 0.2s, border-color 0.2s;
+}
+.conclusion-reco-item:hover {
+    background: rgba(245,158,11,0.09);
+    border-color: rgba(245,158,11,0.3);
+}
+.conclusion-reco-num {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: #f59e0b;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+.conclusion-reco-text {
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+.conclusion-reco-text strong { color: var(--text-primary); }
+
+/* Empty state */
+.conclusion-empty {
+    text-align: center;
+    padding: 32px 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+.conclusion-empty .material-icons-round {
+    font-size: 40px;
+    display: block;
+    margin: 0 auto 10px;
+    opacity: 0.35;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .conclusion-findings-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .conclusion-findings-row { grid-template-columns: 1fr; }
+}

@@ -151,7 +151,10 @@ async function init() {
     populateFilters();
     updateDashboard();
     // Load text mining data for survey section
+    // generateConclusion will be called after text mining data is available
     loadAndRenderTextMining();
+    // Generate initial conclusion from transition + survey data (text mining will update it later)
+    generateConclusion();
 }
 
 async function loadData() {
@@ -695,6 +698,10 @@ function renderDetailLevel1(filtered) {
     
     // Render yearly trend chart
     renderJenjangYearlyTrend(filtered, state.selectedJenjang);
+    
+    // Generate insights for Detail Level 1
+    generateDetailLevel1Insights(orgStats, orgThresholds, state.selectedJenjang);
+    generateJenjangYearlyTrendInsight(filtered, state.selectedJenjang);
 }
 
 function renderSchoolComparisonChart(orgStats, thresholds) {
@@ -844,6 +851,10 @@ function renderDetailLevel2(filtered) {
     
     // Render yearly trend for this school
     renderSchoolYearlyTrend(filtered);
+    
+    // Generate insights for Detail Level 2
+    generateDetailLevel2Insights(state.tableData);
+    generateSchoolYearlyTrendInsight();
 }
 
 function renderClassCharts(tableData) {
@@ -1015,6 +1026,11 @@ function updateDashboard() {
     const filtered = getFilteredRecords();
     updateKPIs(filtered);
     renderCharts(filtered);
+    
+    // Generate dynamic chart insights
+    generateOverviewInsights(filtered);
+    generateTrenInsights(filtered);
+    generateSurveyInsights();
     
     // Detail Sekolah drill-down rendering based on current level
     navigateDetail(state.detailLevel, state.selectedJenjang, state.selectedOrg);
@@ -1635,6 +1651,730 @@ function renderCharts(filtered = getFilteredRecords()) {
 }
 
 // ============================================================
+// DYNAMIC CHART INSIGHTS (Rule-Based Interpretation)
+// ============================================================
+
+function setInsight(id, html) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    // Re-trigger fade animation
+    el.style.animation = 'none';
+    el.offsetHeight; // force reflow
+    el.style.animation = '';
+    el.innerHTML = html;
+}
+
+function fmt(n) { return Number(n).toLocaleString('id-ID'); }
+function pct(n) { return Number(n).toFixed(1); }
+
+// --- Overview Insights ---
+function generateOverviewInsights(filtered) {
+    // 1. Overview Trend
+    const trendRecords = state.records.filter(r => {
+        const mJ = state.filters.jenjang === 'all' || r.jenjang === state.filters.jenjang;
+        const mO = state.filters.organization === 'all' || r.organization_code === state.filters.organization;
+        return mJ && mO;
+    });
+    const aggP = aggregateByPeriod(trendRecords);
+    const periods = state.metadata ? state.metadata.periods : [];
+
+    if (periods.length >= 2) {
+        const last = periods[periods.length - 1];
+        const prev = periods[periods.length - 2];
+        const dL = aggP[last] ? aggP[last].lanjut : 0;
+        const dK = aggP[last] ? aggP[last].keluar : 0;
+        const pL = aggP[prev] ? aggP[prev].lanjut : 0;
+        const pK = aggP[prev] ? aggP[prev].keluar : 0;
+
+        const deltaL = pL > 0 ? ((dL - pL) / pL * 100) : 0;
+        const deltaK = pK > 0 ? ((dK - pK) / pK * 100) : 0;
+        const trendL = deltaL > 1 ? 'naik' : deltaL < -1 ? 'turun' : 'relatif stabil';
+        const trendK = deltaK > 1 ? 'naik' : deltaK < -1 ? 'turun' : 'relatif stabil';
+
+        let trendInsight = `Pada periode <strong>${last}</strong>, jumlah siswa lanjut tercatat <strong>${fmt(dL)}</strong> siswa — `;
+        trendInsight += trendL === 'relatif stabil'
+            ? `<span class="insight-neutral">${trendL}</span> dibanding periode sebelumnya.`
+            : `<span class="${trendL === 'naik' ? 'insight-highlight' : 'insight-warn'}">${trendL} ${pct(Math.abs(deltaL))}%</span> dari periode ${prev} (${fmt(pL)}).`;
+        trendInsight += ` Siswa keluar ${trendK === 'relatif stabil' ? trendK : trendK + ' ' + pct(Math.abs(deltaK)) + '%'} (${fmt(dK)} siswa).`;
+        setInsight('insightOverviewTrend', trendInsight);
+    } else {
+        setInsight('insightOverviewTrend', '');
+    }
+
+    // 2. Overview Donut
+    let totL = 0, totK = 0;
+    filtered.forEach(r => {
+        if (r.type === 'lanjut') totL += r.jumlah_siswa;
+        else if (r.type === 'keluar') totK += r.jumlah_siswa;
+    });
+    const totAll = totL + totK;
+    if (totAll > 0) {
+        const rate = (totL / totAll * 100);
+        const rateClass = rate >= 90 ? 'insight-highlight' : rate >= 80 ? 'insight-neutral' : 'insight-warn';
+        const rateLabel = rate >= 90 ? 'sangat baik' : rate >= 80 ? 'cukup baik' : 'perlu perhatian';
+        setInsight('insightOverviewDonut',
+            `Dari total <strong>${fmt(totAll)}</strong> siswa, <span class="${rateClass}">${pct(rate)}%</span> (<strong>${fmt(totL)}</strong>) melanjutkan dan <strong>${fmt(totK)}</strong> keluar. Retention rate secara keseluruhan tergolong <span class="${rateClass}">${rateLabel}</span>.`
+        );
+    } else {
+        setInsight('insightOverviewDonut', '');
+    }
+}
+
+// --- Tren Insights ---
+function generateTrenInsights(filtered) {
+    const trendRecords = state.records.filter(r => {
+        const mJ = state.filters.jenjang === 'all' || r.jenjang === state.filters.jenjang;
+        const mO = state.filters.organization === 'all' || r.organization_code === state.filters.organization;
+        return mJ && mO;
+    });
+    const periods = state.metadata ? state.metadata.periods : [];
+    const aggP = aggregateByPeriod(trendRecords);
+
+    // 1. Trend Line Chart
+    if (periods.length >= 2) {
+        const last = periods[periods.length - 1];
+        const first = periods[0];
+        const firstL = aggP[first] ? aggP[first].lanjut : 0;
+        const lastL = aggP[last] ? aggP[last].lanjut : 0;
+        const firstK = aggP[first] ? aggP[first].keluar : 0;
+        const lastK = aggP[last] ? aggP[last].keluar : 0;
+        const longDeltaL = firstL > 0 ? ((lastL - firstL) / firstL * 100) : 0;
+        const longDeltaK = firstK > 0 ? ((lastK - firstK) / firstK * 100) : 0;
+
+        let txt = `Selama ${periods.length} periode (${first} s/d ${last}), siswa lanjut `;
+        txt += longDeltaL > 1 ? `<span class="insight-highlight">meningkat ${pct(longDeltaL)}%</span>` : longDeltaL < -1 ? `<span class="insight-warn">menurun ${pct(Math.abs(longDeltaL))}%</span>` : `<span class="insight-neutral">relatif stabil</span>`;
+        txt += ` (${fmt(firstL)} → ${fmt(lastL)}). Siswa keluar `;
+        txt += longDeltaK > 1 ? `<span class="insight-warn">meningkat ${pct(longDeltaK)}%</span>` : longDeltaK < -1 ? `<span class="insight-highlight">menurun ${pct(Math.abs(longDeltaK))}%</span>` : `<span class="insight-neutral">relatif stabil</span>`;
+        txt += ` (${fmt(firstK)} → ${fmt(lastK)}).`;
+        setInsight('insightTrendLine', txt);
+    } else {
+        setInsight('insightTrendLine', '');
+    }
+
+    // 2 & 3. Jenjang Charts
+    if (periods.length >= 1) {
+        const aggJ = aggregateByJenjang(trendRecords, periods);
+        const lastP = periods[periods.length - 1];
+        const jData = aggJ[lastP];
+        if (jData) {
+            // Keluar per Jenjang
+            const jenjangList = ['TK', 'SD', 'SMP'];
+            const keluarArr = jenjangList.map(j => ({ j, v: jData.keluar[j] || 0 })).sort((a, b) => b.v - a.v);
+            const totalKeluar = keluarArr.reduce((s, x) => s + x.v, 0);
+            if (totalKeluar > 0) {
+                const top = keluarArr[0];
+                const topPct = (top.v / totalKeluar * 100);
+                setInsight('insightKeluarJenjang',
+                    `Pada periode terakhir (<strong>${lastP}</strong>), jenjang <span class="insight-warn">${top.j}</span> menyumbang jumlah siswa keluar terbanyak (<strong>${fmt(top.v)}</strong> siswa, ${pct(topPct)}% dari total). ${keluarArr.length > 1 ? `Diikuti ${keluarArr[1].j} (${fmt(keluarArr[1].v)}) dan ${keluarArr[2].j} (${fmt(keluarArr[2].v)}).` : ''}`
+                );
+            } else {
+                setInsight('insightKeluarJenjang', '');
+            }
+
+            // Lanjut per Jenjang
+            const lanjutArr = jenjangList.map(j => ({ j, v: jData.lanjut[j] || 0 })).sort((a, b) => b.v - a.v);
+            const totalLanjut = lanjutArr.reduce((s, x) => s + x.v, 0);
+            if (totalLanjut > 0) {
+                const top = lanjutArr[0];
+                const topPct = (top.v / totalLanjut * 100);
+                setInsight('insightLanjutJenjang',
+                    `Jenjang <span class="insight-highlight">${top.j}</span> mendominasi jumlah siswa lanjut pada periode <strong>${lastP}</strong> dengan <strong>${fmt(top.v)}</strong> siswa (${pct(topPct)}% dari total ${fmt(totalLanjut)}).`
+                );
+            } else {
+                setInsight('insightLanjutJenjang', '');
+            }
+        }
+    }
+}
+
+// --- Survey Insights ---
+function generateSurveyInsights() {
+    if (!state.survey) return;
+
+    // Alasan Keluar
+    const aK_raw = Array.isArray(state.survey.alasan_keluar) ? state.survey.alasan_keluar : [];
+    const aK = aK_raw.filter(d => {
+        const lbl = (d.label || d.alasan || '').toLowerCase();
+        return !lbl.includes('tidak ada') && !lbl.includes('semua sudah baik') && !lbl.includes('sudah bagus');
+    }).slice(0, 8);
+    if (aK.length > 0) {
+        const top = aK[0];
+        const topLabel = top.label || top.alasan;
+        const topCount = top.count || top.jumlah;
+        const topPct = top.percentage ? ` (${top.percentage}%)` : '';
+        let txt = `Area perbaikan utama yang paling banyak disoroti responden adalah "<span class="insight-warn">${topLabel}</span>" dengan <strong>${fmt(topCount)}</strong> responden${topPct}.`;
+        if (aK.length > 1) {
+            const sec = aK[1];
+            txt += ` Diikuti oleh "${sec.label || sec.alasan}" (${fmt(sec.count || sec.jumlah)} responden).`;
+        }
+        setInsight('insightAlasanKeluar', txt);
+    } else {
+        setInsight('insightAlasanKeluar', '');
+    }
+
+    // Alasan Mendaftar
+    const aL_raw = Array.isArray(state.survey.alasan_mendaftar) ? state.survey.alasan_mendaftar : [];
+    const aL = aL_raw.slice(0, 8);
+    if (aL.length > 0) {
+        const top = aL[0];
+        const topLabel = top.label || top.alasan;
+        const topCount = top.count || top.jumlah;
+        const topPct = top.percentage ? ` (${top.percentage}%)` : '';
+        setInsight('insightAlasanLanjut',
+            `Alasan mendaftar terpopuler adalah "<span class="insight-highlight">${topLabel}</span>" dengan <strong>${fmt(topCount)}</strong> responden${topPct}. Faktor ini menjadi daya tarik utama bagi orang tua dalam memilih sekolah Petra.`
+        );
+    } else {
+        setInsight('insightAlasanLanjut', '');
+    }
+
+    // Sumber Info
+    const sInfo_raw = Array.isArray(state.survey.sumber_info) ? state.survey.sumber_info : [];
+    const sInfo = sInfo_raw.slice(0, 8);
+    if (sInfo.length > 0) {
+        const top = sInfo[0];
+        const totalResp = sInfo.reduce((s, d) => s + (d.count || 0), 0);
+        const topPct = totalResp > 0 ? pct(top.count / totalResp * 100) : '0';
+        let txt = `<span class="insight-highlight">${top.label}</span> menjadi kanal informasi utama PSB (<strong>${fmt(top.count)}</strong> responden, ${topPct}%).`;
+        if (sInfo.length > 1) {
+            txt += ` Sumber kedua terpopuler adalah "${sInfo[1].label}" (${fmt(sInfo[1].count)} responden).`;
+        }
+        setInsight('insightSumberInfo', txt);
+    } else {
+        setInsight('insightSumberInfo', '');
+    }
+
+    // Kepuasan Layanan (Likert)
+    const likert = Array.isArray(state.survey.kepuasan_layanan) ? state.survey.kepuasan_layanan : [];
+    if (likert.length > 0) {
+        const scores = likert.map(q => {
+            const dist = q.distribution || [];
+            let weightedSum = 0, totalResp = 0;
+            dist.forEach(d => {
+                const labelStr = String(d.label || '').trim();
+                const scoreVal = parseInt(labelStr);
+                if (!isNaN(scoreVal) && scoreVal >= 1 && scoreVal <= 5) {
+                    weightedSum += scoreVal * (d.count || 0);
+                    totalResp += (d.count || 0);
+                }
+            });
+            return { question: q.question, avg: totalResp > 0 ? weightedSum / totalResp : 0 };
+        }).filter(s => s.avg > 0);
+
+        if (scores.length > 0) {
+            scores.sort((a, b) => b.avg - a.avg);
+            const best = scores[0];
+            const worst = scores[scores.length - 1];
+            const overallAvg = scores.reduce((s, x) => s + x.avg, 0) / scores.length;
+
+            let shortBest = best.question.length > 40 ? best.question.slice(0, 37) + '...' : best.question;
+            let shortWorst = worst.question.length > 40 ? worst.question.slice(0, 37) + '...' : worst.question;
+
+            const overallLabel = overallAvg >= 4.0 ? 'sangat baik' : overallAvg >= 3.5 ? 'baik' : overallAvg >= 3.0 ? 'cukup' : 'perlu perbaikan';
+            const overallClass = overallAvg >= 4.0 ? 'insight-highlight' : overallAvg >= 3.0 ? 'insight-neutral' : 'insight-warn';
+
+            setInsight('insightKepuasanLayanan',
+                `Rata-rata kepuasan keseluruhan: <span class="${overallClass}">${pct(overallAvg)}/5 (${overallLabel})</span>. Skor tertinggi pada "<strong>${shortBest}</strong>" (${pct(best.avg)}/5), terendah pada "<span class="insight-warn">${shortWorst}</span>" (${pct(worst.avg)}/5).`
+            );
+        } else {
+            setInsight('insightKepuasanLayanan', '');
+        }
+    } else {
+        setInsight('insightKepuasanLayanan', '');
+    }
+}
+
+// --- Text Mining Insights ---
+function generateTextMiningInsights() {
+    // Sentiment Donut
+    if (state.textMining && state.textMining.sentiment && state.textMining.sentiment.summary) {
+        const summary = state.textMining.sentiment.summary;
+        const total = state.textMining.sentiment.total || summary.reduce((s, x) => s + x.count, 0);
+        const positif = summary.find(s => s.label === 'Positif');
+        const perbaikan = summary.find(s => s.label === 'Saran Perbaikan');
+
+        if (total > 0 && positif && perbaikan) {
+            const dominan = positif.count >= perbaikan.count ? positif : perbaikan;
+            const dominanClass = dominan.label === 'Positif' ? 'insight-highlight' : 'insight-warn';
+            setInsight('insightSentimentDonut',
+                `Dari <strong>${fmt(total)}</strong> saran yang dianalisis, mayoritas bersifat <span class="${dominanClass}">${dominan.label}</span> (${dominan.percentage}%). Terdapat <strong>${fmt(positif.count)}</strong> komentar positif dan <strong>${fmt(perbaikan.count)}</strong> saran perbaikan yang bisa ditindaklanjuti.`
+            );
+        }
+    }
+
+    // Topic Bar
+    if (state.textMining && state.textMining.topics && state.textMining.topics.topics) {
+        const topics = state.textMining.topics.topics;
+        if (topics.length > 0) {
+            const top = topics[0];
+            let txt = `Topik yang paling banyak dibahas adalah "<span class="insight-highlight">${top.topic}</span>" (<strong>${fmt(top.count)}</strong> saran, ${top.percentage}%).`;
+            if (topics.length > 1) {
+                txt += ` Diikuti "${topics[1].topic}" (${fmt(topics[1].count)}, ${topics[1].percentage}%).`;
+            }
+            if (topics.length > 2) {
+                txt += ` Topik ini layak mendapat perhatian prioritas.`;
+            }
+            setInsight('insightTopicBar', txt);
+        }
+    }
+}
+
+// --- Detail Sekolah Insights ---
+function generateDetailLevel1Insights(orgStats, thresholds, jenjang) {
+    if (!orgStats || orgStats.length === 0) return;
+
+    // School Comparison
+    const sorted = [...orgStats].sort((a, b) => b.retention - a.retention);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const avgRet = orgStats.reduce((s, o) => s + o.retention, 0) / orgStats.length;
+
+    let txt = `Dari <strong>${orgStats.length}</strong> cabang ${jenjang}, rata-rata retention rate adalah <strong>${pct(avgRet)}%</strong>. `;
+    txt += `Cabang terbaik: <span class="insight-highlight">${best.name || best.code}</span> (${pct(best.retention)}%). `;
+    if (sorted.length > 1 && worst.retention < thresholds.rendah) {
+        txt += `Cabang <span class="insight-warn">${worst.name || worst.code}</span> (${pct(worst.retention)}%) perlu perhatian khusus.`;
+    } else if (sorted.length > 1) {
+        txt += `Cabang terendah: ${worst.name || worst.code} (${pct(worst.retention)}%).`;
+    }
+    setInsight('insightSchoolComparison', txt);
+}
+
+function generateJenjangYearlyTrendInsight(records, jenjang) {
+    const jRecords = records.filter(r => r.jenjang === jenjang);
+    const yearly = getYearlyStats(jRecords);
+    if (yearly.length < 2) { setInsight('insightJenjangYearlyTrend', ''); return; }
+
+    const first = yearly[0];
+    const last = yearly[yearly.length - 1];
+    const delta = last.retention - first.retention;
+    const trendWord = delta > 1 ? 'meningkat' : delta < -1 ? 'menurun' : 'relatif stabil';
+    const trendClass = delta > 1 ? 'insight-highlight' : delta < -1 ? 'insight-warn' : 'insight-neutral';
+
+    setInsight('insightJenjangYearlyTrend',
+        `Retention rate jenjang <strong>${jenjang}</strong> <span class="${trendClass}">${trendWord}</span> dari <strong>${pct(first.retention)}%</strong> (${first.period}) menjadi <strong>${pct(last.retention)}%</strong> (${last.period})${Math.abs(delta) > 1 ? ` (${delta > 0 ? '+' : ''}${pct(delta)} poin)` : ''}.`
+    );
+}
+
+function generateDetailLevel2Insights(tableData) {
+    if (!tableData || tableData.length === 0) {
+        setInsight('insightClassRetention', '');
+        setInsight('insightClassDistribution', '');
+        return;
+    }
+
+    // Class Retention
+    const sorted = [...tableData].sort((a, b) => b.retention - a.retention);
+    const best = sorted[0];
+    const worst = sorted[sorted.length - 1];
+    const avgRet = tableData.reduce((s, d) => s + d.retention, 0) / tableData.length;
+
+    let txt = `Rata-rata retention rate: <strong>${pct(avgRet)}%</strong> dari ${tableData.length} kelas. `;
+    txt += `Kelas terbaik: <span class="insight-highlight">${best.kelas}</span> (${pct(best.retention)}%)`;
+    if (sorted.length > 1) {
+        txt += `, terendah: <span class="insight-warn">${worst.kelas}</span> (${pct(worst.retention)}%)`;
+    }
+    txt += '.';
+    setInsight('insightClassRetention', txt);
+
+    // Class Distribution
+    const totalL = tableData.reduce((s, d) => s + d.lanjut, 0);
+    const totalK = tableData.reduce((s, d) => s + d.keluar, 0);
+    const totalAll = totalL + totalK;
+    if (totalAll > 0) {
+        const worstKeluar = [...tableData].sort((a, b) => b.keluar - a.keluar)[0];
+        let distTxt = `Dari <strong>${tableData.length}</strong> kelas, total <span class="insight-highlight">${fmt(totalL)}</span> siswa melanjutkan dan <span class="insight-warn">${fmt(totalK)}</span> keluar.`;
+        if (worstKeluar.keluar > 0) {
+            const worstPct = (worstKeluar.keluar / totalK * 100);
+            distTxt += ` ${worstKeluar.kelas} menyumbang jumlah keluar terbesar (<strong>${fmt(worstKeluar.keluar)}</strong> siswa, ${pct(worstPct)}% dari total keluar).`;
+        }
+        setInsight('insightClassDistribution', distTxt);
+    } else {
+        setInsight('insightClassDistribution', '');
+    }
+}
+
+function generateSchoolYearlyTrendInsight() {
+    const schoolRecords = state.records.filter(r =>
+        r.jenjang === state.selectedJenjang && r.organization_code === state.selectedOrg
+    );
+    const yearly = getYearlyStats(schoolRecords);
+    if (yearly.length < 2) { setInsight('insightSchoolYearlyTrend', ''); return; }
+
+    const first = yearly[0];
+    const last = yearly[yearly.length - 1];
+    const delta = last.retention - first.retention;
+    const trendWord = delta > 1 ? 'meningkat' : delta < -1 ? 'menurun' : 'relatif stabil';
+    const trendClass = delta > 1 ? 'insight-highlight' : delta < -1 ? 'insight-warn' : 'insight-neutral';
+
+    const orgName = getOrgName(state.selectedOrg);
+    setInsight('insightSchoolYearlyTrend',
+        `Retention rate <strong>${orgName}</strong> <span class="${trendClass}">${trendWord}</span> dari ${pct(first.retention)}% (${first.period}) ke ${pct(last.retention)}% (${last.period})${Math.abs(delta) > 1 ? ` (${delta > 0 ? '+' : ''}${pct(delta)} poin)` : ''}. Jumlah siswa lanjut pada periode terakhir: <strong>${fmt(last.lanjut)}</strong> siswa.`
+    );
+}
+
+// ============================================================
+// SECTION KESIMPULAN — Conclusion Generator
+// ============================================================
+
+function generateConclusion() {
+    const allRecords = state.records;
+    if (!allRecords || allRecords.length === 0) return;
+
+    const periods = state.metadata ? state.metadata.periods : [];
+    const jenjangList = ['TK', 'SD', 'SMP'];
+
+    // ---- Global Retention ----
+    let gLanjut = 0, gKeluar = 0;
+    allRecords.forEach(r => {
+        if (r.type === 'lanjut') gLanjut += r.jumlah_siswa;
+        else if (r.type === 'keluar') gKeluar += r.jumlah_siswa;
+    });
+    const gTotal = gLanjut + gKeluar;
+    const gRate = gTotal > 0 ? (gLanjut / gTotal * 100) : 0;
+
+    // ---- Trend (all periods, all jenjang) ----
+    const yearly = getYearlyStats(allRecords);
+    let trendWord = 'stabil', trendDelta = 0, trendIcon = 'trending_flat', trendClass = 'neutral';
+    if (yearly.length >= 2) {
+        const first = yearly[0], last = yearly[yearly.length - 1];
+        trendDelta = last.retention - first.retention;
+        if (trendDelta > 1)  { trendWord = 'meningkat'; trendIcon = 'trending_up';   trendClass = 'positive'; }
+        if (trendDelta < -1) { trendWord = 'menurun';   trendIcon = 'trending_down'; trendClass = 'negative'; }
+    }
+
+    // ---- Jenjang stats ----
+    const jStats = jenjangList.map(j => {
+        let lj = 0, kj = 0;
+        allRecords.forEach(r => {
+            if (r.jenjang !== j) return;
+            if (r.type === 'lanjut') lj += r.jumlah_siswa;
+            else if (r.type === 'keluar') kj += r.jumlah_siswa;
+        });
+        const tj = lj + kj;
+        return { j, lanjut: lj, keluar: kj, total: tj, retention: tj > 0 ? (lj / tj * 100) : 0 };
+    }).filter(s => s.total > 0).sort((a, b) => b.retention - a.retention);
+
+    const bestJ = jStats[0];
+    const worstJ = jStats[jStats.length - 1];
+
+    // ---- Schools below threshold ----
+    const orgMap = {};
+    allRecords.forEach(r => {
+        const key = r.organization_code;
+        if (!orgMap[key]) orgMap[key] = { lanjut: 0, keluar: 0, name: getOrgName(r.organization_code), jenjang: new Set() };
+        if (r.type === 'lanjut') orgMap[key].lanjut += r.jumlah_siswa;
+        else if (r.type === 'keluar') orgMap[key].keluar += r.jumlah_siswa;
+        orgMap[key].jenjang.add(r.jenjang);
+    });
+    const orgArr = Object.values(orgMap).map(o => {
+        const t = o.lanjut + o.keluar;
+        return { ...o, total: t, retention: t > 0 ? (o.lanjut / t * 100) : 0 };
+    }).filter(o => o.total > 0);
+    const avgOrgRetention = orgArr.reduce((s, o) => s + o.retention, 0) / (orgArr.length || 1);
+    const atRiskOrgs = orgArr.filter(o => o.retention < avgOrgRetention - 3).sort((a, b) => a.retention - b.retention).slice(0, 3);
+    const highPerfOrgs = orgArr.filter(o => o.retention > avgOrgRetention + 3).sort((a, b) => b.retention - a.retention).slice(0, 3);
+
+    // ---- Tren jenjang ----
+    const jTrend = {};
+    jenjangList.forEach(j => {
+        const jRec = allRecords.filter(r => r.jenjang === j);
+        const jYearly = getYearlyStats(jRec);
+        if (jYearly.length >= 2) {
+            const d = jYearly[jYearly.length - 1].retention - jYearly[0].retention;
+            jTrend[j] = d;
+        } else {
+            jTrend[j] = 0;
+        }
+    });
+
+    // ---- Survey data ----
+    const alasanKeluar  = (state.survey && state.survey.alasan_keluar)  ? state.survey.alasan_keluar  : [];
+    const alasanLanjut  = (state.survey && state.survey.alasan_mendaftar) ? state.survey.alasan_mendaftar : [];
+    const sumberInfo    = (state.survey && state.survey.sumber_info)    ? state.survey.sumber_info    : [];
+
+    const topKeluar = alasanKeluar.filter(d => {
+        const lbl = (d.label || d.alasan || '').toLowerCase();
+        return !lbl.includes('tidak ada') && !lbl.includes('semua sudah baik') && !lbl.includes('sudah bagus');
+    }).slice(0, 3);
+
+    const topLanjut  = alasanLanjut.slice(0, 2);
+    const topSumber  = sumberInfo.slice(0, 1);
+
+    // ---- Text mining ----
+    const tmSentiment = state.textMining && state.textMining.sentiment ? state.textMining.sentiment : null;
+    const tmTopics    = state.textMining && state.textMining.topics    ? state.textMining.topics    : null;
+
+    // ================================================================
+    // POPULATE DOM
+    // ================================================================
+
+    // Header badges
+    const badgePeriod  = document.getElementById('conclusionBadgePeriod');
+    const badgeSekolah = document.getElementById('conclusionBadgeSekolah');
+    if (badgePeriod)  badgePeriod.textContent  = `${periods.length} Tahun Ajaran Dianalisis`;
+    if (badgeSekolah) badgeSekolah.textContent = `${orgArr.length} Cabang Sekolah`;
+
+    // ---- KPI Snapshot ----
+    const elRate = document.getElementById('cncRetentionRate');
+    if (elRate) elRate.textContent = `${pct(gRate)}%`;
+
+    const elRateTrend = document.getElementById('cncRetentionTrend');
+    if (elRateTrend) {
+        elRateTrend.className = `kpi-trend ${trendClass}`;
+        const trendText = trendWord === 'stabil'
+            ? `Stabil selama ${periods.length} periode`
+            : `${trendDelta > 0 ? '+' : ''}${pct(trendDelta)} poin dari ${periods[0] || ''} s/d ${periods[periods.length - 1] || ''}`;
+        elRateTrend.innerHTML = `<span class="material-icons-round trend-icon">${trendIcon}</span><span class="trend-text">${trendText}</span>`;
+    }
+
+    const elTotal = document.getElementById('cncTotalSiswa');
+    if (elTotal) elTotal.textContent = fmt(gTotal);
+
+    const elPeriode = document.getElementById('cncPeriodeCount');
+    if (elPeriode) {
+        elPeriode.innerHTML = `<span class="material-icons-round trend-icon">calendar_today</span><span class="trend-text">${periods.length} tahun ajaran (${periods[0] || ''} — ${periods[periods.length - 1] || ''})</span>`;
+    }
+
+    if (bestJ) {
+        const el = document.getElementById('cncBestJenjang');
+        const elS = document.getElementById('cncBestJenjangRate');
+        if (el) el.textContent = bestJ.j;
+        if (elS) elS.innerHTML = `<span class="material-icons-round trend-icon">workspace_premium</span><span class="trend-text">${pct(bestJ.retention)}% retention rate</span>`;
+    }
+    if (worstJ && jStats.length > 1) {
+        const el = document.getElementById('cncWorstJenjang');
+        const elS = document.getElementById('cncWorstJenjangRate');
+        if (el) el.textContent = worstJ.j;
+        if (elS) elS.innerHTML = `<span class="material-icons-round trend-icon">warning_amber</span><span class="trend-text">${pct(worstJ.retention)}% retention rate</span>`;
+    }
+
+    // ================================================================
+    // AREA PERHATIAN (Danger card)
+    // ================================================================
+    const dangerItems = [];
+
+    // 1. Tren global turun
+    if (trendDelta < -2) {
+        dangerItems.push(`Retention rate global menunjukkan tren <strong>penurunan ${pct(Math.abs(trendDelta))} poin</strong> selama ${periods.length} periode terakhir — perlu investigasi penyebab struktural.`);
+    }
+
+    // 2. Jenjang dengan tren negatif
+    jenjangList.forEach(j => {
+        if (jTrend[j] < -3) {
+            dangerItems.push(`Jenjang <strong>${j}</strong> mengalami penurunan retention rate sebesar <strong>${pct(Math.abs(jTrend[j]))} poin</strong> selama periode analisis.`);
+        }
+    });
+
+    // 3. Jenjang terlemah jauh di bawah rata-rata
+    if (worstJ && jStats.length > 1) {
+        const diff = bestJ.retention - worstJ.retention;
+        if (diff > 5) {
+            dangerItems.push(`Kesenjangan retention rate antara jenjang terbaik (${bestJ.j}: ${pct(bestJ.retention)}%) dan terendah (${worstJ.j}: ${pct(worstJ.retention)}%) mencapai <strong>${pct(diff)} poin</strong>.`);
+        }
+    }
+
+    // 4. Sekolah berisiko
+    if (atRiskOrgs.length > 0) {
+        const names = atRiskOrgs.map(o => `${o.name} (${pct(o.retention)}%)`).join(', ');
+        dangerItems.push(`${atRiskOrgs.length} cabang berada di bawah rata-rata retention: <strong>${names}</strong> — perlu perhatian prioritas.`);
+    }
+
+    // 5. Keluhan terbanyak dari survei
+    if (topKeluar.length > 0) {
+        const top = topKeluar[0];
+        const label = top.label || top.alasan;
+        const count = top.count || top.jumlah;
+        dangerItems.push(`Keluhan terbanyak dari responden survei: "<strong>${label}</strong>" (<strong>${fmt(count)}</strong> responden) — merupakan area perbaikan prioritas.`);
+    }
+
+    const dangerEl = document.getElementById('conclusionDangerList');
+    if (dangerEl) {
+        if (dangerItems.length > 0) {
+            dangerEl.innerHTML = dangerItems.map(txt =>
+                `<div class="conclusion-finding-item"><div class="fi-dot"></div><div>${txt}</div></div>`
+            ).join('');
+        } else {
+            dangerEl.innerHTML = `<div class="conclusion-empty"><span class="material-icons-round">check_circle</span>Tidak ada area perhatian kritis yang terdeteksi.</div>`;
+        }
+    }
+
+    // ================================================================
+    // KEKUATAN UTAMA (Success card)
+    // ================================================================
+    const successItems = [];
+
+    // 1. Global rate tinggi
+    if (gRate >= 90) {
+        successItems.push(`Retention rate global mencapai <strong>${pct(gRate)}%</strong> — tergolong <strong>sangat baik</strong> dan mencerminkan loyalitas tinggi orang tua terhadap sekolah Petra.`);
+    } else if (gRate >= 85) {
+        successItems.push(`Retention rate global <strong>${pct(gRate)}%</strong> menunjukkan tingkat loyalitas orang tua yang <strong>baik</strong> secara keseluruhan.`);
+    }
+
+    // 2. Jenjang terbaik
+    if (bestJ && bestJ.retention >= 90) {
+        successItems.push(`Jenjang <strong>${bestJ.j}</strong> memiliki retention rate tertinggi (<strong>${pct(bestJ.retention)}%</strong>), menjadi tolok ukur keberhasilan yang dapat direplikasi jenjang lain.`);
+    }
+
+    // 3. Sekolah dengan performa tinggi
+    if (highPerfOrgs.length > 0) {
+        const names = highPerfOrgs.map(o => `${o.name} (${pct(o.retention)}%)`).join(', ');
+        successItems.push(`${highPerfOrgs.length} cabang menunjukkan performa di atas rata-rata: <strong>${names}</strong> — praktik terbaik di cabang ini layak dijadikan referensi.`);
+    }
+
+    // 4. Alasan mendaftar positif
+    if (topLanjut.length > 0) {
+        const top = topLanjut[0];
+        const label = top.label || top.alasan;
+        const count = top.count || top.jumlah;
+        successItems.push(`Alasan pendaftaran terpopuler: "<strong>${label}</strong>" (<strong>${fmt(count)}</strong> responden) — menunjukkan nilai khas yang menjadi daya tarik utama Petra.`);
+    }
+
+    // 5. Tren naik
+    if (trendDelta > 2) {
+        successItems.push(`Tren retention rate secara keseluruhan <strong>meningkat ${pct(trendDelta)} poin</strong> selama ${periods.length} periode — sinyal positif arah perbaikan yang konsisten.`);
+    }
+
+    const successEl = document.getElementById('conclusionSuccessList');
+    if (successEl) {
+        if (successItems.length > 0) {
+            successEl.innerHTML = successItems.map(txt =>
+                `<div class="conclusion-finding-item"><div class="fi-dot"></div><div>${txt}</div></div>`
+            ).join('');
+        } else {
+            successEl.innerHTML = `<div class="conclusion-empty"><span class="material-icons-round">info</span>Data belum cukup untuk mengidentifikasi kekuatan utama.</div>`;
+        }
+    }
+
+    // ================================================================
+    // SUARA ORANG TUA (Voice card)
+    // ================================================================
+    const voiceItems = [];
+
+    // Sentiment summary
+    if (tmSentiment && tmSentiment.summary) {
+        const total = tmSentiment.total || tmSentiment.summary.reduce((s, x) => s + x.count, 0);
+        const positif   = tmSentiment.summary.find(s => s.label === 'Positif');
+        const perbaikan = tmSentiment.summary.find(s => s.label === 'Saran Perbaikan');
+        const netral    = tmSentiment.summary.find(s => s.label === 'Netral');
+
+        if (positif && perbaikan) {
+            const pPct = positif.percentage || pct(positif.count / total * 100);
+            const kPct = perbaikan.percentage || pct(perbaikan.count / total * 100);
+            voiceItems.push(
+                `Dari <strong>${fmt(total)}</strong> saran yang dianalisis: <strong>${pPct}%</strong> bernada positif, <strong>${kPct}%</strong> berupa saran perbaikan yang dapat ditindaklanjuti.` +
+                `<div class="conclusion-sentiment-bar" style="margin-top:8px">` +
+                `<div style="width:${pPct}%;background:#059669"></div>` +
+                `<div style="width:${kPct}%;background:#02C5BE"></div>` +
+                `<div style="width:${netral ? (netral.percentage || '0') : '0'}%;background:#94a3b8"></div>` +
+                `</div>`
+            );
+        }
+    } else if (topKeluar.length === 0 && topLanjut.length === 0) {
+        voiceItems.push('Data survei sedang dimuat...');
+    }
+
+    // Top topik
+    if (tmTopics && tmTopics.topics && tmTopics.topics.length > 0) {
+        const tops = tmTopics.topics.slice(0, 2);
+        const topicStr = tops.map(t => `"${t.topic}" (${t.percentage}%)`).join(' dan ');
+        voiceItems.push(`Topik paling banyak dibahas dalam saran: <strong>${topicStr}</strong>.`);
+    }
+
+    // Sumber info terpopuler
+    if (topSumber.length > 0) {
+        const s = topSumber[0];
+        voiceItems.push(`Orang tua paling banyak mendapatkan informasi PSB melalui <strong>${s.label}</strong> — kanal ini perlu dioptimalkan sebagai sarana komunikasi utama.`);
+    }
+
+    // Sample positive quote from sentiment
+    if (tmSentiment && tmSentiment.all_comments) {
+        const positifSamples = tmSentiment.all_comments.filter(c => c.sentiment === 'Positif' && c.saran && c.saran.length > 30 && c.saran.length < 160);
+        if (positifSamples.length > 0) {
+            const sample = positifSamples[Math.floor(Math.random() * Math.min(10, positifSamples.length))];
+            voiceItems.push(`<div class="conclusion-quote">${sample.saran}</div>`);
+        }
+    }
+
+    const voiceEl = document.getElementById('conclusionVoiceList');
+    if (voiceEl) {
+        if (voiceItems.length > 0) {
+            voiceEl.innerHTML = voiceItems.map((txt, i) =>
+                i === voiceItems.length - 1 && txt.startsWith('<div')
+                    ? txt  // raw HTML (quote)
+                    : `<div class="conclusion-finding-item"><div class="fi-dot"></div><div>${txt}</div></div>`
+            ).join('');
+        } else {
+            voiceEl.innerHTML = `<div class="conclusion-empty"><span class="material-icons-round">info</span>Data survei belum tersedia.</div>`;
+        }
+    }
+
+    // ================================================================
+    // REKOMENDASI
+    // ================================================================
+    const recos = [];
+
+    // From tren turun
+    if (trendDelta < -2) {
+        recos.push(`Lakukan analisis mendalam terhadap faktor-faktor penyebab <strong>penurunan retention rate global ${pct(Math.abs(trendDelta))} poin</strong> selama ${periods.length} periode. Pertimbangkan review kebijakan akademik dan komunikasi dengan orang tua.`);
+    }
+
+    // From jenjang lemah
+    if (worstJ && jStats.length > 1 && (bestJ.retention - worstJ.retention) > 5) {
+        recos.push(`Fokuskan program retensi khusus untuk jenjang <strong>${worstJ.j}</strong> (retention ${pct(worstJ.retention)}%). Identifikasi perbedaan pengalaman orang tua di jenjang ini dibanding jenjang lain.`);
+    }
+
+    // From jenjang tren negatif
+    jenjangList.forEach(j => {
+        if (jTrend[j] < -3) {
+            recos.push(`Investigasi penyebab penurunan retention jenjang <strong>${j}</strong> (turun ${pct(Math.abs(jTrend[j]))} poin). Wawancara orang tua yang tidak melanjutkan dapat memberikan insight berharga.`);
+        }
+    });
+
+    // From at-risk schools
+    if (atRiskOrgs.length > 0) {
+        const names = atRiskOrgs.slice(0, 2).map(o => o.name).join(' dan ');
+        recos.push(`Prioritaskan dukungan manajemen untuk cabang <strong>${names}</strong>. Review program unggulan dari cabang berperforma tinggi dan replikasikan praktik terbaik tersebut.`);
+    }
+
+    // From top keluhan
+    if (topKeluar.length > 0) {
+        const top = topKeluar[0];
+        const label = top.label || top.alasan;
+        const count = top.count || top.jumlah;
+        recos.push(`Tangani keluhan utama "<strong>${label}</strong>" yang disampaikan oleh <strong>${fmt(count)}</strong> responden. Pertimbangkan komunikasi proaktif dan transparansi informasi terkait hal ini.`);
+    }
+    if (topKeluar.length > 1) {
+        const sec = topKeluar[1];
+        const label2 = sec.label || sec.alasan;
+        recos.push(`Tindak lanjuti keluhan "<strong>${label2}</strong>" sebagai prioritas kedua. Bentuk tim task force atau program perbaikan terstruktur untuk isu ini.`);
+    }
+
+    // From high perf
+    if (highPerfOrgs.length > 0) {
+        recos.push(`Dokumentasikan dan sebarluaskan praktik terbaik dari cabang berperforma tinggi (<strong>${highPerfOrgs.map(o=>o.name).join(', ')}</strong>) ke seluruh jaringan sekolah Petra sebagai benchmark internal.`);
+    }
+
+    // From sumber info
+    if (topSumber.length > 0) {
+        recos.push(`Optimalkan <strong>${topSumber[0].label}</strong> sebagai kanal komunikasi PSB utama — perkuat konten dan konsistensi informasi di platform ini untuk meningkatkan jangkauan.`);
+    }
+
+    // Always add monitoring reco
+    recos.push(`Laksanakan survei kepuasan dan monitoring retention secara berkala setiap akhir tahun ajaran untuk memantau efektivitas program yang dijalankan.`);
+
+    const recoEl = document.getElementById('conclusionRecoList');
+    const recoCount = document.getElementById('conclusionRecoCount');
+    if (recoCount) recoCount.textContent = recos.length;
+    if (recoEl) {
+        recoEl.innerHTML = recos.map((txt, i) =>
+            `<div class="conclusion-reco-item">
+                <div class="conclusion-reco-num">${i + 1}</div>
+                <div class="conclusion-reco-text">${txt}</div>
+            </div>`
+        ).join('');
+    }
+}
+
+// ============================================================
 // TEXT MINING: Saran & Masukan Rendering
 // ============================================================
 
@@ -1672,6 +2412,11 @@ async function loadAndRenderTextMining() {
             renderTopicBarChart(topicRes.value);
             renderTopicAccordion(topicRes.value);
         }
+        
+        // Generate text mining insights after all data is loaded
+        generateTextMiningInsights();
+        // Regenerate conclusion now that text mining data is available
+        generateConclusion();
     } catch (e) {
         console.warn('Text mining data not available:', e);
     }
@@ -2130,20 +2875,22 @@ function switchDashboardSection(sectionId) {
     const titles = {
         'section-overview': {t: 'Overview', s: 'Ringkasan transisi dan retensi siswa'},
         'section-trends': {t: 'Analisis Tren', s: 'Tren pertumbuhan siswa (Lanjut vs Keluar)'},
-        'section-retention': {t: 'Retensi per Jenjang & Sekolah', s: 'Detail retensi berdasar jenjang dan unit sekolah'},
+        'section-details': {t: 'Detail Sekolah', s: 'Analisis retensi tingkat kelas dan trend per unit sekolah'},
         'section-survey': {t: 'Analisis Survei & Saran', s: 'Daftar masukan/saran dan unduh data'},
-        'section-saran-detail': {t: 'Eksplorasi Semua Saran & Masukan', s: 'Filter, cari kata kunci, dan telusuri seluruh komentar survei per sekolah'}
+        'section-saran-detail': {t: 'Eksplorasi Semua Saran & Masukan', s: 'Filter, cari kata kunci, dan telusuri seluruh komentar survei per sekolah'},
+        'section-conclusion': {t: 'Kesimpulan & Rekomendasi', s: 'Sintesis temuan utama dan rekomendasi tindakan lanjut'}
     };
 
-    const h = document.getElementById('topbarPageTitle');
-    const sub = document.getElementById('topbarPageSubtitle');
+    const h = document.getElementById('pageTitle');
+    const sub = document.getElementById('pageSubtitle');
     if (h && titles[sectionId]) h.textContent = titles[sectionId].t;
     if (sub && titles[sectionId]) sub.textContent = titles[sectionId].s;
     
     const isSurvey = (sectionId === 'section-survey' || sectionId === 'section-saran-detail');
+    const isConclusion = (sectionId === 'section-conclusion');
     const globalFiltersEl = document.getElementById('globalFiltersBar');
     const surveyActionsEl = document.getElementById('surveyTopbarActions');
-    if (globalFiltersEl) globalFiltersEl.style.display = isSurvey ? 'none' : 'flex';
+    if (globalFiltersEl) globalFiltersEl.style.display = (isSurvey || isConclusion) ? 'none' : 'flex';
     if (surveyActionsEl) surveyActionsEl.style.display = isSurvey ? 'flex' : 'none';
 
     // Opsi 1: Sembunyikan Jenjang dan Sekolah filter di tab Detail Sekolah

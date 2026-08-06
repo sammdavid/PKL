@@ -18,12 +18,8 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="spinner"></div>
         <div class="loading-text">Memuat Data...</div>
-    </div>
-
-    <!-- Toast Container -->
-    <div id="toastContainer" class="toast-container"></div>
-
-    <div class="dashboard-layout">
+    </div>    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>    <div class="dashboard-layout">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
@@ -56,9 +52,7 @@
                     </li>
                 </ul>
             </nav>
-        </aside>
-
-        <!-- Main Content -->
+        </aside>        <!-- Main Content -->
         <main class="main-content">
             <!-- Topbar -->
             <header class="topbar">
@@ -143,9 +137,7 @@
                         </div>
                     </div>
                 </div>
-            </header>
-
-            <!-- Sections Container -->
+            </header>            <!-- Sections Container -->
             <div class="sections-container">
                 <!-- Overview Section -->
                 <section id="section-overview" class="dashboard-section active">
@@ -203,9 +195,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Charts Row -->
+                    </div>                    <!-- Charts Row -->
                     <div class="charts-row split-2-1">
                         <div class="chart-card">
                             <div class="chart-header">
@@ -225,9 +215,9 @@
                             </div>
                             <div class="chart-insight" id="insightOverviewDonut"></div>
                         </div>
-                    </div>
-                </section>
 
+                </section>
+                
                 <!-- Analisis Tren Section -->
                 <section id="section-trends" class="dashboard-section">
                     <div class="chart-card full-width">
@@ -259,14 +249,12 @@
                             <div class="chart-insight" id="insightLanjutJenjang"></div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Analisis Survei Section -->
+                </section>                <!-- Analisis Survei Section -->
                 <section id="section-survey" class="dashboard-section">
                     <div class="charts-row split-1-1">
                         <div class="chart-card border-top-red">
                             <div class="chart-header header-red">
-                                <h3>Top Area Perbaikan / Alasan Keluar</h3>
+                                <h3>Top Area Perbaikan</h3>
                             </div>
                             <div class="chart-body">
                                 <canvas id="alasanKeluarChart"></canvas>
@@ -275,7 +263,7 @@
                         </div>
                         <div class="chart-card border-top-green">
                             <div class="chart-header header-green">
-                                <h3>Top Alasan Mendaftar (Sentimen Positif)</h3>
+                                <h3>Top Alasan Retention</h3>
                             </div>
                             <div class="chart-body">
                                 <canvas id="alasanLanjutChart"></canvas>
@@ -302,9 +290,7 @@
                             </div>
                             <div class="chart-insight" id="insightKepuasanLayanan"></div>
                         </div>
-                    </div>
-
-                    <!-- Text Mining: Saran & Masukan -->
+                    </div>                    <!-- Text Mining: Saran & Masukan -->
                     <div class="text-mining-section">
                         <div class="text-mining-section-title">
                             <span class="material-icons-round">psychology</span>
@@ -312,19 +298,15 @@
                                 <h2>Text Mining — Saran & Masukan</h2>
                                 <p>Analisis otomatis dari <span id="tmTotalSaran">0</span> teks isian bebas responden</p>
                             </div>
-                        </div>
-
-                        <!-- Word Cloud -->
+                        </div>                        <!-- Word Cloud -->
                         <div class="wordcloud-card">
                             <div class="chart-header">
                                 <h3>Word Cloud — Kata Terpopuler</h3>
                             </div>
-                            <div id="wordCloudWrapper" style="width: 100%; min-height: 340px; display: flex; justify-content: center; align-items: center; position: relative; padding: 12px 16px;">
-                                <canvas id="wordCloudCanvas" width="900" height="340" style="width: 100%; height: 340px; cursor: pointer;"></canvas>
+                            <div id="wordCloudWrapper" style="width: 100%; min-height: 400px; display: flex; justify-content: center; align-items: center; position: relative; padding: 1.5rem;">
+                                <canvas id="wordCloudCanvas" width="900" height="400" style="width: 100%; height: 400px; cursor: pointer;"></canvas>
                             </div>
-                        </div>
-
-                        <!-- Sentiment Donut + Topic Bar -->
+                        </div>                        <!-- Sentiment Donut + Topic Bar -->
                         <div class="tm-charts-row">
                             <div class="tm-chart-card">
                                 <h3>Klasifikasi Sentimen Saran</h3>
@@ -341,25 +323,19 @@
                                 </div>
                                 <div class="chart-insight" id="insightTopicBar"></div>
                             </div>
-                        </div>
-
-                        <!-- Contoh Saran per Sentimen -->
+                        </div>                        <!-- Contoh Saran per Sentimen -->
                         <div class="tm-charts-row" style="grid-template-columns: 1fr;">
                             <div class="tm-chart-card">
                                 <h3>Contoh Saran per Sentimen</h3>
                                 <div id="sentimentSamples"></div>
                             </div>
-                        </div>
-
-                        <!-- Topic Accordion -->
+                        </div>                        <!-- Topic Accordion -->
                         <div class="tm-chart-card">
                             <h3>Detail Saran per Topik</h3>
                             <div class="topic-accordion" id="topicAccordion">
                                 <!-- Populated by JS -->
                             </div>
-                        </div>
-
-                        <!-- Explore All Comments Banner -->
+                        </div>                        <!-- Explore All Comments Banner -->
                         <div class="explore-all-banner" onclick="openSaranExplorer('ALL', 'ALL')">
                             <div class="explore-all-content">
                                 <div class="explore-all-icon">
@@ -376,9 +352,7 @@
                             </button>
                         </div>
                     </div>
-                </section>
-
-                <!-- Eksplorasi Semua Saran & Masukan Section (Dedicated Comments View) -->
+                </section>                <!-- Eksplorasi Semua Saran & Masukan Section (Dedicated Comments View) -->
                 <section id="section-saran-detail" class="dashboard-section" style="display: none;">
                     <!-- Navigation Bar -->
                     <div class="detail-nav-bar" style="display: flex; margin-bottom: 24px;">
@@ -386,9 +360,7 @@
                             <span class="material-icons-round">arrow_back</span>
                             <span>Kembali ke Analisis Survei</span>
                         </button>
-                    </div>
-
-                    <!-- Main Header Card -->
+                    </div>                    <!-- Main Header Card -->
                     <div class="saran-explorer-header">
                         <div class="saran-header-left">
                             <h2>Eksplorasi Seluruh Saran & Masukan Responden</h2>
@@ -400,9 +372,7 @@
                                 <span>Unduh Data (Excel)</span>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Filter & Search Toolbar -->
+                    </div>                    <!-- Filter & Search Toolbar -->
                     <div class="saran-filter-toolbar">
                         <!-- Sentimen Tabs -->
                         <div class="saran-sentiment-tabs" id="saranSentimentTabs">
@@ -422,9 +392,7 @@
                                 <span>Netral</span>
                                 <span class="badge" id="countNetralSaran">0</span>
                             </button>
-                        </div>
-
-                        <!-- Filter Row: Topik, Jenjang, Sekolah, Search -->
+                        </div>                        <!-- Filter Row: Topik, Jenjang, Sekolah, Search -->
                         <div class="saran-filter-row" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px;">
                             <div class="filter-group" id="saranFilterGroupTopic" tabindex="0" style="min-width: 190px;">
                                 <span class="material-icons-round filter-icon">category</span>
@@ -442,9 +410,7 @@
                                     </div>
                                 </div>
                                 <span class="material-icons-round dropdown-arrow">expand_more</span>
-                            </div>
-
-                            <div class="filter-group" id="saranFilterGroupJenjang" tabindex="0" style="min-width: 170px;">
+                            </div>                            <div class="filter-group" id="saranFilterGroupJenjang" tabindex="0" style="min-width: 170px;">
                                 <span class="material-icons-round filter-icon">school</span>
                                 <div class="custom-dropdown" id="saranDropdownJenjang">
                                     <div class="dropdown-selected">Semua Jenjang</div>
@@ -459,9 +425,7 @@
                                     </div>
                                 </div>
                                 <span class="material-icons-round dropdown-arrow">expand_more</span>
-                            </div>
-
-                            <div class="filter-group" id="saranFilterGroupOrg" tabindex="0" style="min-width: 220px;">
+                            </div>                            <div class="filter-group" id="saranFilterGroupOrg" tabindex="0" style="min-width: 220px;">
                                 <span class="material-icons-round filter-icon">business</span>
                                 <div class="custom-dropdown" id="saranDropdownOrg">
                                     <div class="dropdown-selected">Semua Sekolah</div>
@@ -470,21 +434,15 @@
                                     </div>
                                 </div>
                                 <span class="material-icons-round dropdown-arrow">expand_more</span>
-                            </div>
-
-                            <div class="saran-search-box" style="flex: 1; min-width: 240px;">
+                            </div>                            <div class="saran-search-box" style="flex: 1; min-width: 240px;">
                                 <span class="material-icons-round">search</span>
                                 <input type="text" id="saranSearchInput" placeholder="Cari kata kunci (cth: cicilan, wa, error)..." oninput="filterSaranBySearch(this.value)">
-                            </div>
-
-                            <button class="btn btn-outline" style="height: 40px; padding: 0 16px; gap: 6px; font-size: 13px; border-color: rgba(2, 197, 190, 0.35); display: flex; align-items: center; border-radius: 99px; background: #fff;" onclick="resetSaranFilters()" title="Reset semua filter saran">
+                            </div>                            <button class="btn btn-outline" style="height: 40px; padding: 0 16px; gap: 6px; font-size: 13px; border-color: rgba(2, 197, 190, 0.35); display: flex; align-items: center; border-radius: 99px; background: #fff;" onclick="resetSaranFilters()" title="Reset semua filter saran">
                                 <span class="material-icons-round" style="font-size: 18px; color: var(--green-primary);">restart_alt</span>
                                 <span style="font-weight: 600; color: var(--green-dark);">Reset Filter</span>
                             </button>
                         </div>
-                    </div>
-
-                    <!-- Table Card -->
+                    </div>                    <!-- Table Card -->
                     <div class="table-card" style="margin-top: 20px;">
                         <div class="table-card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                             <div class="table-title">
@@ -533,28 +491,20 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- Detail Sekolah Section (Drill-Down) -->
-                <section id="section-details" class="dashboard-section">
-
-                    <!-- Navigation Bar (Back + Breadcrumb) - hidden at Level 0 -->
+                </section>                <!-- Detail Sekolah Section (Drill-Down) -->
+                <section id="section-details" class="dashboard-section">                    <!-- Navigation Bar (Back + Breadcrumb) - hidden at Level 0 -->
                     <div class="detail-nav-bar" id="detailNavBar" style="display: none;">
                         <button class="detail-back-btn" id="detailBackBtn">
                             <span class="material-icons-round">arrow_back</span>
                             <span>Kembali</span>
                         </button>
                         <div class="detail-breadcrumb" id="detailBreadcrumb"></div>
-                    </div>
-
-                    <!-- Level 0: Jenjang Selection -->
+                    </div>                    <!-- Level 0: Jenjang Selection -->
                     <div id="detailLevel0" class="detail-level active">
                         <div class="jenjang-card-grid" id="jenjangCardGrid">
                             <!-- Jenjang cards injected by JS -->
                         </div>
-                    </div>
-
-                    <!-- Level 1: School/Branch Cards -->
+                    </div>                    <!-- Level 1: School/Branch Cards -->
                     <div id="detailLevel1" class="detail-level">
                         <div class="school-card-grid" id="schoolCardGrid">
                             <!-- School cards injected by JS -->
@@ -574,9 +524,7 @@
                     <!-- Level 2: Class Detail -->
                     <div id="detailLevel2" class="detail-level">
                         <!-- School Info Header -->
-                        <div class="school-info-header" id="schoolInfoHeader"></div>
-
-                        <!-- Status Summary Cards -->
+                        <div class="school-info-header" id="schoolInfoHeader"></div>                        <!-- Status Summary Cards -->
                         <div class="status-summary-grid">
                             <div class="status-summary-card card-tinggi">
                                 <div class="status-summary-icon">
@@ -626,23 +574,17 @@
                                     <span class="status-summary-threshold">Dari filter aktif</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Threshold Info Bar -->
+                        </div>                        <!-- Threshold Info Bar -->
                         <div class="threshold-info-bar">
                             <span class="material-icons-round" style="font-size:16px; color: var(--text-muted);">info_outline</span>
                             <span id="thresholdInfo" style="color: var(--text-muted); font-size: 13px; font-weight: 500;">Menghitung threshold...</span>
                             <span style="color: var(--text-muted); font-size: 13px;"> &mdash; Threshold dihitung dinamis dari data yang ditampilkan (Mean &plusmn; 0.5 SD)</span>
-                        </div>
-
-                        <!-- Yearly Trend -->
+                        </div>                        <!-- Yearly Trend -->
                         <div class="detail-chart-card" style="margin-bottom: 24px;">
                             <h3>Tren Retention Rate per Tahun Ajaran</h3>
                             <canvas id="schoolYearlyTrendChart"></canvas>
                             <div class="chart-insight" id="insightSchoolYearlyTrend"></div>
-                        </div>
-
-                        <!-- Charts Row -->
+                        </div>                        <!-- Charts Row -->
                         <div class="detail-chart-row">
                             <div class="detail-chart-card">
                                 <h3>Retention Rate per Kelas</h3>
@@ -654,9 +596,7 @@
                                 <canvas id="classDistributionChart"></canvas>
                                 <div class="chart-insight" id="insightClassDistribution"></div>
                             </div>
-                        </div>
-
-                        <!-- Detail Table -->
+                        </div>                        <!-- Detail Table -->
                         <div class="chart-card full-width data-table-card">
                             <div class="table-controls">
                                 <div class="search-box">
@@ -696,23 +636,10 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-                <!-- ==========================================
+                </section>                <!-- ==========================================
                      SECTION: KESIMPULAN
                      ========================================== -->
-                <section id="section-conclusion" class="dashboard-section">
-
-                    <!-- Info Banner (same pattern as other sections) -->
-                    <div class="info-banner" style="background: linear-gradient(90deg, rgba(2,197,190,0.08), rgba(2,197,190,0.03)); border-color: rgba(2,197,190,0.3); border-left-color: var(--green-primary); color: var(--text-primary); margin-bottom: 28px;">
-                        <span class="material-icons-round" style="color: var(--green-primary); flex-shrink:0;">auto_awesome</span>
-                        <div>
-                            <p style="font-weight:600; color: var(--text-primary); margin-bottom:2px;">Sintesis Otomatis Berbasis Data</p>
-                            <p style="font-size:13px; color: var(--text-secondary); font-weight:400;">Kesimpulan ini dihasilkan dari keseluruhan data tanpa filter — mencakup semua periode, semua jenjang, dan semua cabang. Badge: <strong id="conclusionBadgePeriod" style="color:var(--green-primary)">—</strong> &nbsp;·&nbsp; <strong id="conclusionBadgeSekolah" style="color:var(--green-primary)">—</strong></p>
-                        </div>
-                    </div>
-
-                    <!-- Snapshot KPI — reuse existing kpi-grid / kpi-card pattern -->
+                <section id="section-conclusion" class="dashboard-section">                    <!-- Snapshot KPI — reuse existing kpi-grid / kpi-card pattern -->
                     <div class="kpi-grid" style="margin-bottom:28px;">
                         <div class="kpi-card card-green">
                             <div class="kpi-header">
@@ -766,9 +693,7 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- 3-col Findings Row — reuse chart-card pattern -->
+                    </div>                    <!-- 3-col Findings Row — reuse chart-card pattern -->
                     <div class="conclusion-findings-row">
                         <!-- Area Perhatian -->
                         <div class="chart-card conclusion-card danger">
@@ -789,9 +714,7 @@
                                     Memuat data...
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Kekuatan Utama -->
+                        </div>                        <!-- Kekuatan Utama -->
                         <div class="chart-card conclusion-card success">
                             <div class="chart-header" style="margin-bottom:16px;">
                                 <div style="display:flex; align-items:center; gap:12px;">
@@ -810,9 +733,7 @@
                                     Memuat data...
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Suara Orang Tua -->
+                        </div>                        <!-- Suara Orang Tua -->
                         <div class="chart-card conclusion-card voice">
                             <div class="chart-header" style="margin-bottom:16px;">
                                 <div style="display:flex; align-items:center; gap:12px;">
@@ -832,15 +753,10 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Rekomendasi — full-width chart-card -->
+                    </div>                    <!-- Rekomendasi — full-width chart-card -->
                     <div class="chart-card conclusion-reco-card" style="margin-top:0;">
                         <div class="chart-header" style="margin-bottom:20px;">
                             <div style="display:flex; align-items:center; gap:14px;">
-                                <div class="conclusion-reco-icon">
-                                    <span class="material-icons-round">tips_and_updates</span>
-                                </div>
                                 <div>
                                     <h3>Rekomendasi Tindak Lanjut</h3>
                                     <p style="font-size:13px; color:var(--text-muted); margin-top:3px;"><span id="conclusionRecoCount">—</span> rekomendasi berdasarkan temuan data</p>
@@ -854,13 +770,9 @@
                             </div>
                         </div>
                     </div>
-                </section>
-
-            </div>
+                </section>            </div>
         </main>
-    </div>
-
-    <!-- Scripts -->
+    </div>    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>

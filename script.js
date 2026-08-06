@@ -712,9 +712,9 @@ function renderSchoolComparisonChart(orgStats, thresholds) {
     const labels = orgStats.map(o => o.code);
     const data = orgStats.map(o => o.retention.toFixed(1));
     const colors = orgStats.map(o => {
-        if (o.retention >= thresholds.tinggi) return 'rgba(2, 197, 190, 0.8)';
+        if (o.retention >= thresholds.tinggi) return 'rgba(27, 94, 32, 0.8)';
         if (o.retention >= thresholds.rendah) return 'rgba(71, 85, 105, 0.6)';
-        return 'rgba(255, 152, 0, 0.8)';
+        return 'rgba(255, 243, 43, 0.8)';
     });
     
     state.charts['schoolComparisonChart'] = new Chart(canvas, {
@@ -771,12 +771,12 @@ function renderJenjangYearlyTrend(records, jenjang) {
             datasets: [{
                 label: 'Retention Rate (%)',
                 data: yearlyData.map(y => y.retention.toFixed(1)),
-                borderColor: 'rgba(2, 197, 190, 1)',
-                backgroundColor: 'rgba(2, 197, 190, 0.1)',
+                borderColor: 'rgba(27, 94, 32, 1)',
+                backgroundColor: 'rgba(27, 94, 32, 0.1)',
                 fill: true,
                 tension: 0.3,
                 pointRadius: 6,
-                pointBackgroundColor: 'rgba(2, 197, 190, 1)',
+                pointBackgroundColor: 'rgba(27, 94, 32, 1)',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 borderWidth: 3
@@ -867,9 +867,9 @@ function renderClassCharts(tableData) {
         const data = sorted.map(d => d.retention.toFixed(1));
         const colors = sorted.map(d => {
             const s = getStatusLabel(d.retention);
-            if (s === 'tinggi') return 'rgba(2, 197, 190, 0.8)';
+            if (s === 'tinggi') return 'rgba(27, 94, 32, 0.8)';
             if (s === 'sedang') return 'rgba(71, 85, 105, 0.6)';
-            return 'rgba(255, 152, 0, 0.8)';
+            return 'rgba(255, 243, 43, 0.8)';
         });
         
         state.charts['classRetentionChart'] = new Chart(canvas1, {
@@ -912,13 +912,13 @@ function renderClassCharts(tableData) {
                     {
                         label: 'Lanjut',
                         data: sorted.map(d => d.lanjut),
-                        backgroundColor: 'rgba(2, 197, 190, 0.7)',
+                        backgroundColor: 'rgba(27, 94, 32, 0.7)',
                         borderRadius: 4
                     },
                     {
                         label: 'Keluar',
                         data: sorted.map(d => d.keluar),
-                        backgroundColor: 'rgba(255, 152, 0, 0.7)',
+                        backgroundColor: 'rgba(255, 243, 43, 0.7)',
                         borderRadius: 4
                     }
                 ]
@@ -963,12 +963,12 @@ function renderSchoolYearlyTrend(allRecords) {
                 {
                     label: 'Retention Rate (%)',
                     data: yearlyData.map(y => y.retention.toFixed(1)),
-                    borderColor: 'rgba(2, 197, 190, 1)',
-                    backgroundColor: 'rgba(2, 197, 190, 0.1)',
+                    borderColor: 'rgba(27, 94, 32, 1)',
+                    backgroundColor: 'rgba(27, 94, 32, 0.1)',
                     fill: true,
                     tension: 0.3,
                     pointRadius: 6,
-                    pointBackgroundColor: 'rgba(2, 197, 190, 1)',
+                    pointBackgroundColor: 'rgba(27, 94, 32, 1)',
                     pointBorderColor: '#fff',
                     pointBorderWidth: 2,
                     borderWidth: 3,
@@ -977,8 +977,8 @@ function renderSchoolYearlyTrend(allRecords) {
                 {
                     label: 'Siswa Lanjut',
                     data: yearlyData.map(y => y.lanjut),
-                    borderColor: 'rgba(2, 197, 190, 0.5)',
-                    backgroundColor: 'rgba(2, 197, 190, 0.3)',
+                    borderColor: 'rgba(27, 94, 32, 0.5)',
+                    backgroundColor: 'rgba(27, 94, 32, 0.3)',
                     type: 'bar',
                     borderRadius: 4,
                     yAxisID: 'y1'
@@ -986,8 +986,8 @@ function renderSchoolYearlyTrend(allRecords) {
                 {
                     label: 'Siswa Keluar',
                     data: yearlyData.map(y => y.keluar),
-                    borderColor: 'rgba(255, 152, 0, 0.5)',
-                    backgroundColor: 'rgba(255, 152, 0, 0.3)',
+                    borderColor: 'rgba(255, 243, 43, 0.5)',
+                    backgroundColor: 'rgba(255, 243, 43, 0.3)',
                     type: 'bar',
                     borderRadius: 4,
                     yAxisID: 'y1'
@@ -1031,6 +1031,7 @@ function updateDashboard() {
     generateOverviewInsights(filtered);
     generateTrenInsights(filtered);
     generateSurveyInsights();
+    updateOverviewSurveyHighlights();
     
     // Detail Sekolah drill-down rendering based on current level
     navigateDetail(state.detailLevel, state.selectedJenjang, state.selectedOrg);
@@ -1293,8 +1294,8 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Lanjut', data: dataLanjut, borderColor: '#02C5BE', backgroundColor: 'rgba(2, 197, 190, 0.15)', fill: true, tension: 0.4 },
-                { label: 'Keluar', data: dataKeluar, borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.15)', fill: true, tension: 0.4 }
+                { label: 'Lanjut', data: dataLanjut, borderColor: '#1b5e20', backgroundColor: 'rgba(27, 94, 32, 0.15)', pointBackgroundColor: '#1b5e20', pointBorderWidth: 0, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4, borderWidth: 3 },
+                { label: 'Keluar', data: dataKeluar, borderColor: '#fff32b', backgroundColor: 'rgba(255, 243, 43, 0.4)', pointBackgroundColor: '#fff32b', pointBorderWidth: 0, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4, borderWidth: 3 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -1312,13 +1313,22 @@ function renderCharts(filtered = getFilteredRecords()) {
         plugins: [ChartDataLabels],
         data: {
             labels: ['Lanjut', 'Keluar'],
-            datasets: [{ data: [totL, totK], backgroundColor: ['#02C5BE', '#ff9800'], borderWidth: 0, cutout: '75%', hoverOffset: 10 }]
+            datasets: [{ data: [totL, totK], backgroundColor: ['#1b5e20', '#fff32b'], borderWidth: 2, borderColor: '#ffffff', cutout: '65%', hoverOffset: 10 }]
         },
         options: { 
             responsive: true, maintainAspectRatio: false,
+            layout: { padding: 30 },
             plugins: { 
-                legend: { position: 'bottom' },
-                datalabels: { color: '#fff', formatter: (v, ctx) => { let sum = ctx.dataset.data.reduce((a,b)=>a+b,0); return sum>0 ? Math.round((v*100)/sum)+"%" : ""; } }
+                legend: { position: 'bottom', align: 'center', labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' } },
+                datalabels: {
+                    anchor: 'center',
+                    align: 'center',
+                    color: function(ctx) {
+                        return ctx.dataIndex === 1 ? '#1b5e20' : '#ffffff';
+                    },
+                    font: { weight: 'bold', size: 14 },
+                    formatter: (v, ctx) => { let sum = ctx.dataset.data.reduce((a,b)=>a+b,0); return sum>0 ? Math.round((v*100)/sum)+"%" : ""; }
+                }
             }
         }
     });
@@ -1330,8 +1340,8 @@ function renderCharts(filtered = getFilteredRecords()) {
         data: {
             labels: labels,
             datasets: [
-                { label: 'Lanjut', data: dataLanjut, borderColor: '#02C5BE', backgroundColor: 'rgba(2, 197, 190, 0.15)', fill: true, tension: 0.4 },
-                { label: 'Keluar', data: dataKeluar, borderColor: '#ff9800', backgroundColor: 'rgba(255, 152, 0, 0.15)', fill: true, tension: 0.4 }
+                { label: 'Lanjut', data: dataLanjut, borderColor: '#1b5e20', backgroundColor: 'rgba(27, 94, 32, 0.15)', pointBackgroundColor: '#1b5e20', pointBorderWidth: 0, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4, borderWidth: 3 },
+                { label: 'Keluar', data: dataKeluar, borderColor: '#fff32b', backgroundColor: 'rgba(255, 243, 43, 0.4)', pointBackgroundColor: '#fff32b', pointBorderWidth: 0, pointRadius: 4, pointHoverRadius: 6, fill: true, tension: 0.4, borderWidth: 3 }
             ]
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
@@ -1347,7 +1357,7 @@ function renderCharts(filtered = getFilteredRecords()) {
             labels: labels,
             datasets: [
                 { label: 'TK', data: labels.map(p => aggJenjang[p].keluar.TK), backgroundColor: '#ffcc80' },
-                { label: 'SD', data: labels.map(p => aggJenjang[p].keluar.SD), backgroundColor: '#ff9800' },
+                { label: 'SD', data: labels.map(p => aggJenjang[p].keluar.SD), backgroundColor: '#fff32b' },
                 { label: 'SMP', data: labels.map(p => aggJenjang[p].keluar.SMP), backgroundColor: '#e65100' }
             ]
         },
@@ -1361,7 +1371,7 @@ function renderCharts(filtered = getFilteredRecords()) {
             labels: labels,
             datasets: [
                 { label: 'TK', data: labels.map(p => aggJenjang[p].lanjut.TK), backgroundColor: '#80cbc4' },
-                { label: 'SD', data: labels.map(p => aggJenjang[p].lanjut.SD), backgroundColor: '#02C5BE' },
+                { label: 'SD', data: labels.map(p => aggJenjang[p].lanjut.SD), backgroundColor: '#1b5e20' },
                 { label: 'SMP', data: labels.map(p => aggJenjang[p].lanjut.SMP), backgroundColor: '#00695c' }
             ]
         },
@@ -1426,7 +1436,7 @@ function renderCharts(filtered = getFilteredRecords()) {
                     datasets: [{
                         label: 'Jumlah Responden',
                         data: aK.map(d => d.count || d.jumlah),
-                        backgroundColor: '#ff9800', // Amber/Orange to match Overview Keluar
+                        backgroundColor: '#fff32b', // Amber/Orange to match Overview Keluar
                         borderRadius: 6
                     }]
                 },
@@ -1474,7 +1484,7 @@ function renderCharts(filtered = getFilteredRecords()) {
                     datasets: [{
                         label: 'Jumlah Responden',
                         data: aL.map(d => d.count || d.jumlah),
-                        backgroundColor: '#02C5BE', // Petra Primary Bright Teal
+                        backgroundColor: '#1b5e20', // Petra Primary Bright Teal
                         borderRadius: 6
                     }]
                 },
@@ -1581,7 +1591,7 @@ function renderCharts(filtered = getFilteredRecords()) {
 
             const likertLabels = ['5 (Sangat Baik/Mudah)', '4 (Baik/Mudah)', '3 (Cukup)', '2 (Kurang)', '1 (Sangat Kurang)', 'Tidak Diisi'];
             const likertKeys = ['5', '4', '3', '2', '1', 'tidak diisi'];
-            const colors = ['#00897B', '#02C5BE', '#2dd4bf', '#f59e0b', '#ef4444', '#94a3b8']; // Harmonious Likert scale with Petra Teal
+            const colors = ['#00897B', '#1b5e20', '#2dd4bf', '#f59e0b', '#ef4444', '#94a3b8']; // Harmonious Likert scale with Petra Teal
 
             const datasets = likertLabels.map((lbl, idx) => {
                 const targetKey = likertKeys[idx];
@@ -1883,6 +1893,10 @@ function generateSurveyInsights() {
     }
 }
 
+function updateOverviewSurveyHighlights() {
+    // This section has been removed from the overview page as per user request.
+}
+
 // --- Text Mining Insights ---
 function generateTextMiningInsights() {
     // Sentiment Donut
@@ -2121,8 +2135,8 @@ function generateConclusion() {
     if (elRateTrend) {
         elRateTrend.className = `kpi-trend ${trendClass}`;
         const trendText = trendWord === 'stabil'
-            ? `Stabil selama ${periods.length} periode`
-            : `${trendDelta > 0 ? '+' : ''}${pct(trendDelta)} poin dari ${periods[0] || ''} s/d ${periods[periods.length - 1] || ''}`;
+            ? `Stabil (${periods.length} periode)`
+            : `${trendDelta > 0 ? '+' : ''}${pct(trendDelta)} poin (${periods.length} periode)`;
         elRateTrend.innerHTML = `<span class="material-icons-round trend-icon">${trendIcon}</span><span class="trend-text">${trendText}</span>`;
     }
 
@@ -2131,7 +2145,7 @@ function generateConclusion() {
 
     const elPeriode = document.getElementById('cncPeriodeCount');
     if (elPeriode) {
-        elPeriode.innerHTML = `<span class="material-icons-round trend-icon">calendar_today</span><span class="trend-text">${periods.length} tahun ajaran (${periods[0] || ''} — ${periods[periods.length - 1] || ''})</span>`;
+        elPeriode.innerHTML = `<span class="material-icons-round trend-icon">calendar_today</span><span class="trend-text">${periods[0] || ''} — ${periods[periods.length - 1] || ''}</span>`;
     }
 
     if (bestJ) {
@@ -2154,13 +2168,13 @@ function generateConclusion() {
 
     // 1. Tren global turun
     if (trendDelta < -2) {
-        dangerItems.push(`Retention rate global menunjukkan tren <strong>penurunan ${pct(Math.abs(trendDelta))} poin</strong> selama ${periods.length} periode terakhir — perlu investigasi penyebab struktural.`);
+        dangerItems.push(`Tren retention rate <strong>turun ${pct(Math.abs(trendDelta))} poin</strong> dalam ${periods.length} periode.`);
     }
 
     // 2. Jenjang dengan tren negatif
     jenjangList.forEach(j => {
         if (jTrend[j] < -3) {
-            dangerItems.push(`Jenjang <strong>${j}</strong> mengalami penurunan retention rate sebesar <strong>${pct(Math.abs(jTrend[j]))} poin</strong> selama periode analisis.`);
+            dangerItems.push(`Retention jenjang <strong>${j}</strong> turun <strong>${pct(Math.abs(jTrend[j]))} poin</strong>.`);
         }
     });
 
@@ -2168,14 +2182,14 @@ function generateConclusion() {
     if (worstJ && jStats.length > 1) {
         const diff = bestJ.retention - worstJ.retention;
         if (diff > 5) {
-            dangerItems.push(`Kesenjangan retention rate antara jenjang terbaik (${bestJ.j}: ${pct(bestJ.retention)}%) dan terendah (${worstJ.j}: ${pct(worstJ.retention)}%) mencapai <strong>${pct(diff)} poin</strong>.`);
+            dangerItems.push(`Gap retention ${bestJ.j} (${pct(bestJ.retention)}%) vs ${worstJ.j} (${pct(worstJ.retention)}%): <strong>${pct(diff)} poin</strong>.`);
         }
     }
 
     // 4. Sekolah berisiko
     if (atRiskOrgs.length > 0) {
         const names = atRiskOrgs.map(o => `${o.name} (${pct(o.retention)}%)`).join(', ');
-        dangerItems.push(`${atRiskOrgs.length} cabang berada di bawah rata-rata retention: <strong>${names}</strong> — perlu perhatian prioritas.`);
+        dangerItems.push(`<strong>${atRiskOrgs.length} cabang</strong> di bawah rata-rata: ${names}.`);
     }
 
     // 5. Keluhan terbanyak dari survei
@@ -2183,7 +2197,7 @@ function generateConclusion() {
         const top = topKeluar[0];
         const label = top.label || top.alasan;
         const count = top.count || top.jumlah;
-        dangerItems.push(`Keluhan terbanyak dari responden survei: "<strong>${label}</strong>" (<strong>${fmt(count)}</strong> responden) — merupakan area perbaikan prioritas.`);
+        dangerItems.push(`Keluhan utama: "<strong>${label}</strong>" (${fmt(count)} responden).`);
     }
 
     const dangerEl = document.getElementById('conclusionDangerList');
@@ -2204,20 +2218,20 @@ function generateConclusion() {
 
     // 1. Global rate tinggi
     if (gRate >= 90) {
-        successItems.push(`Retention rate global mencapai <strong>${pct(gRate)}%</strong> — tergolong <strong>sangat baik</strong> dan mencerminkan loyalitas tinggi orang tua terhadap sekolah Petra.`);
+        successItems.push(`Retention rate global <strong>${pct(gRate)}%</strong> — <strong>sangat baik</strong>.`);
     } else if (gRate >= 85) {
-        successItems.push(`Retention rate global <strong>${pct(gRate)}%</strong> menunjukkan tingkat loyalitas orang tua yang <strong>baik</strong> secara keseluruhan.`);
+        successItems.push(`Retention rate global <strong>${pct(gRate)}%</strong> — tergolong <strong>baik</strong>.`);
     }
 
     // 2. Jenjang terbaik
     if (bestJ && bestJ.retention >= 90) {
-        successItems.push(`Jenjang <strong>${bestJ.j}</strong> memiliki retention rate tertinggi (<strong>${pct(bestJ.retention)}%</strong>), menjadi tolok ukur keberhasilan yang dapat direplikasi jenjang lain.`);
+        successItems.push(`Jenjang <strong>${bestJ.j}</strong> tertinggi: <strong>${pct(bestJ.retention)}%</strong>.`);
     }
 
     // 3. Sekolah dengan performa tinggi
     if (highPerfOrgs.length > 0) {
         const names = highPerfOrgs.map(o => `${o.name} (${pct(o.retention)}%)`).join(', ');
-        successItems.push(`${highPerfOrgs.length} cabang menunjukkan performa di atas rata-rata: <strong>${names}</strong> — praktik terbaik di cabang ini layak dijadikan referensi.`);
+        successItems.push(`<strong>${highPerfOrgs.length} cabang</strong> di atas rata-rata: ${names}.`);
     }
 
     // 4. Alasan mendaftar positif
@@ -2225,12 +2239,12 @@ function generateConclusion() {
         const top = topLanjut[0];
         const label = top.label || top.alasan;
         const count = top.count || top.jumlah;
-        successItems.push(`Alasan pendaftaran terpopuler: "<strong>${label}</strong>" (<strong>${fmt(count)}</strong> responden) — menunjukkan nilai khas yang menjadi daya tarik utama Petra.`);
+        successItems.push(`Alasan mendaftar terpopuler: "<strong>${label}</strong>" (${fmt(count)} responden).`);
     }
 
     // 5. Tren naik
     if (trendDelta > 2) {
-        successItems.push(`Tren retention rate secara keseluruhan <strong>meningkat ${pct(trendDelta)} poin</strong> selama ${periods.length} periode — sinyal positif arah perbaikan yang konsisten.`);
+        successItems.push(`Tren retention <strong>naik ${pct(trendDelta)} poin</strong> dalam ${periods.length} periode.`);
     }
 
     const successEl = document.getElementById('conclusionSuccessList');
@@ -2263,7 +2277,7 @@ function generateConclusion() {
                 `Dari <strong>${fmt(total)}</strong> saran yang dianalisis: <strong>${pPct}%</strong> bernada positif, <strong>${kPct}%</strong> berupa saran perbaikan yang dapat ditindaklanjuti.` +
                 `<div class="conclusion-sentiment-bar" style="margin-top:8px">` +
                 `<div style="width:${pPct}%;background:#059669"></div>` +
-                `<div style="width:${kPct}%;background:#02C5BE"></div>` +
+                `<div style="width:${kPct}%;background:#1b5e20"></div>` +
                 `<div style="width:${netral ? (netral.percentage || '0') : '0'}%;background:#94a3b8"></div>` +
                 `</div>`
             );
@@ -2308,69 +2322,85 @@ function generateConclusion() {
     }
 
     // ================================================================
-    // REKOMENDASI
+    // REKOMENDASI — Categorized Action Cards
     // ================================================================
-    const recos = [];
+    const recoPriority = [];
+    const recoInvestigate = [];
+    const recoBestPractice = [];
+    const recoMonitoring = [];
 
-    // From tren turun
+    // Priority: from trend decline & top complaints
     if (trendDelta < -2) {
-        recos.push(`Lakukan analisis mendalam terhadap faktor-faktor penyebab <strong>penurunan retention rate global ${pct(Math.abs(trendDelta))} poin</strong> selama ${periods.length} periode. Pertimbangkan review kebijakan akademik dan komunikasi dengan orang tua.`);
+        recoPriority.push(`Segera bentuk tim task-force untuk membedah akar masalah <strong>penurunan retention ${pct(Math.abs(trendDelta))} poin</strong> selama ${periods.length} periode terakhir. Audit ulang kebijakan akademik dan efektivitas jalur komunikasi wali murid.`);
     }
-
-    // From jenjang lemah
-    if (worstJ && jStats.length > 1 && (bestJ.retention - worstJ.retention) > 5) {
-        recos.push(`Fokuskan program retensi khusus untuk jenjang <strong>${worstJ.j}</strong> (retention ${pct(worstJ.retention)}%). Identifikasi perbedaan pengalaman orang tua di jenjang ini dibanding jenjang lain.`);
-    }
-
-    // From jenjang tren negatif
-    jenjangList.forEach(j => {
-        if (jTrend[j] < -3) {
-            recos.push(`Investigasi penyebab penurunan retention jenjang <strong>${j}</strong> (turun ${pct(Math.abs(jTrend[j]))} poin). Wawancara orang tua yang tidak melanjutkan dapat memberikan insight berharga.`);
-        }
-    });
-
-    // From at-risk schools
-    if (atRiskOrgs.length > 0) {
-        const names = atRiskOrgs.slice(0, 2).map(o => o.name).join(' dan ');
-        recos.push(`Prioritaskan dukungan manajemen untuk cabang <strong>${names}</strong>. Review program unggulan dari cabang berperforma tinggi dan replikasikan praktik terbaik tersebut.`);
-    }
-
-    // From top keluhan
     if (topKeluar.length > 0) {
         const top = topKeluar[0];
-        const label = top.label || top.alasan;
-        const count = top.count || top.jumlah;
-        recos.push(`Tangani keluhan utama "<strong>${label}</strong>" yang disampaikan oleh <strong>${fmt(count)}</strong> responden. Pertimbangkan komunikasi proaktif dan transparansi informasi terkait hal ini.`);
+        recoPriority.push(`Jadikan isu "<strong>${top.label || top.alasan}</strong>" (${fmt(top.count || top.jumlah)} responden) sebagai agenda darurat. Rancang strategi komunikasi yang proaktif sebelum eskalasi meluas.`);
     }
     if (topKeluar.length > 1) {
         const sec = topKeluar[1];
-        const label2 = sec.label || sec.alasan;
-        recos.push(`Tindak lanjuti keluhan "<strong>${label2}</strong>" sebagai prioritas kedua. Bentuk tim task force atau program perbaikan terstruktur untuk isu ini.`);
+        recoPriority.push(`Tugaskan tim operasional untuk segera mengeksekusi perbaikan taktis pada aspek "<strong>${sec.label || sec.alasan}</strong>".`);
+    }
+    if (atRiskOrgs.length > 0) {
+        const names = atRiskOrgs.slice(0, 2).map(o => o.name).join(' & ');
+        recoPriority.push(`Alokasikan pendampingan khusus dari pusat untuk <strong>${names}</strong> guna mendongkrak kembali angka retention mereka.`);
     }
 
-    // From high perf
+    // Investigate: jenjang issues
+    if (worstJ && jStats.length > 1 && (bestJ.retention - worstJ.retention) > 5) {
+        recoInvestigate.push(`Susun program loyalitas spesifik untuk jenjang <strong>${worstJ.j}</strong> (${pct(worstJ.retention)}%). Lakukan pemetaan menyeluruh pada <em>customer journey</em> untuk mengetahui titik kelemahan layanan.`);
+    }
+    jenjangList.forEach(j => {
+        if (jTrend[j] < -3) {
+            recoInvestigate.push(`Gelar Focus Group Discussion (FGD) tertutup bersama komite orang tua jenjang <strong>${j}</strong> untuk menggali akar keluhan spesifik yang memicu penurunan ${pct(Math.abs(jTrend[j]))} poin.`);
+        }
+    });
+
+    // Best Practice: from high performers
     if (highPerfOrgs.length > 0) {
-        recos.push(`Dokumentasikan dan sebarluaskan praktik terbaik dari cabang berperforma tinggi (<strong>${highPerfOrgs.map(o=>o.name).join(', ')}</strong>) ke seluruh jaringan sekolah Petra sebagai benchmark internal.`);
+        recoBestPractice.push(`Instruksikan kepala sekolah dari <strong>${highPerfOrgs.map(o => o.name).join(', ')}</strong> untuk berbagi <em>success story</em>. Formulasikan strategi mereka menjadi SOP baku bagi seluruh cabang.`);
     }
-
-    // From sumber info
     if (topSumber.length > 0) {
-        recos.push(`Optimalkan <strong>${topSumber[0].label}</strong> sebagai kanal komunikasi PSB utama — perkuat konten dan konsistensi informasi di platform ini untuk meningkatkan jangkauan.`);
+        recoBestPractice.push(`Pusatkan alokasi anggaran dan upaya <em>campaign</em> pada kanal <strong>${topSumber[0].label}</strong>, mengingat efektivitasnya yang paling tinggi.`);
+    }
+    if (bestJ && bestJ.retention >= 90) {
+        recoBestPractice.push(`Adopsi kerangka kerja keberhasilan jenjang <strong>${bestJ.j}</strong> (${pct(bestJ.retention)}%) secara bertahap ke seluruh ekosistem sekolah.`);
     }
 
-    // Always add monitoring reco
-    recos.push(`Laksanakan survei kepuasan dan monitoring retention secara berkala setiap akhir tahun ajaran untuk memantau efektivitas program yang dijalankan.`);
+    // Monitoring: always include
+    recoMonitoring.push(`Survei kepuasan berkala setiap akhir tahun ajaran untuk memantau efektivitas program.`);
+    recoMonitoring.push(`Dashboard monitoring retention real-time per cabang dan per jenjang.`);
+
+    // Build HTML
+    function buildRecoCategoryCard(cssClass, icon, title, subtitle, items) {
+        if (items.length === 0) return '';
+        const bullets = items.map(txt =>
+            `<div class="reco-bullet-item"><span class="material-icons-round">arrow_right</span><div>${txt}</div></div>`
+        ).join('');
+        return `<div class="reco-category-card ${cssClass}">
+            <div class="reco-cat-header">
+                <div>
+                    <div class="reco-cat-title">${title}</div>
+                    <div class="reco-cat-subtitle">${subtitle}</div>
+                </div>
+            </div>
+            <div class="reco-bullet-list">${bullets}</div>
+        </div>`;
+    }
+
+    const recoHTML =
+        buildRecoCategoryCard('priority', 'priority_high', 'Prioritas Mendesak', 'Tindakan segera diperlukan', recoPriority) +
+        buildRecoCategoryCard('investigate', 'search', 'Investigasi Lanjutan', 'Perlu analisis lebih mendalam', recoInvestigate) +
+        buildRecoCategoryCard('bestpractice', 'emoji_events', 'Praktik Terbaik', 'Replikasi keberhasilan', recoBestPractice) +
+        buildRecoCategoryCard('monitoring', 'monitoring', 'Monitoring Berkelanjutan', 'Pantau secara berkala', recoMonitoring);
 
     const recoEl = document.getElementById('conclusionRecoList');
     const recoCount = document.getElementById('conclusionRecoCount');
-    if (recoCount) recoCount.textContent = recos.length;
+    const totalRecos = recoPriority.length + recoInvestigate.length + recoBestPractice.length + recoMonitoring.length;
+    if (recoCount) recoCount.textContent = totalRecos;
     if (recoEl) {
-        recoEl.innerHTML = recos.map((txt, i) =>
-            `<div class="conclusion-reco-item">
-                <div class="conclusion-reco-num">${i + 1}</div>
-                <div class="conclusion-reco-text">${txt}</div>
-            </div>`
-        ).join('');
+        recoEl.className = 'conclusion-reco-grid';
+        recoEl.innerHTML = recoHTML;
     }
 }
 
@@ -2417,6 +2447,8 @@ async function loadAndRenderTextMining() {
         generateTextMiningInsights();
         // Regenerate conclusion now that text mining data is available
         generateConclusion();
+        // Update overview survey highlights (specifically for sentiment)
+        updateOverviewSurveyHighlights();
     } catch (e) {
         console.warn('Text mining data not available:', e);
     }
@@ -2446,7 +2478,7 @@ function renderWordCloud(data) {
     if (!wrapper || !data.top_words || data.top_words.length === 0) return;
 
     if (!canvas) {
-        wrapper.innerHTML = '<canvas id="wordCloudCanvas" width="900" height="340" style="width: 100%; height: 340px; cursor: pointer;"></canvas>';
+        wrapper.innerHTML = '<canvas id="wordCloudCanvas" width="900" height="400" style="width: 100%; height: 400px; cursor: pointer;"></canvas>';
         canvas = document.getElementById('wordCloudCanvas');
     }
 
@@ -2454,7 +2486,7 @@ function renderWordCloud(data) {
     if (words.length === 0) return;
 
     const width = wrapper.clientWidth || 900;
-    const height = 340;
+    const height = 400;
     canvas.width = width;
     canvas.height = height;
 
@@ -2462,14 +2494,14 @@ function renderWordCloud(data) {
     const minCount = Math.min(...words.map(w => w.count));
 
     const colorPalette = [
-        '#02C5BE', '#00897B', '#0d9488', '#f59e0b', '#ff9800',
-        '#0f766e', '#3b82f6', '#475569', '#10b981', '#14b8a6'
+        '#1b5e20', '#2e7d32', '#fff32b', '#388e3c', '#fff9a1',
+        '#4caf50', '#e6da00', '#0a3d0a', '#43a047', '#fff32b'
     ];
 
     if (typeof WordCloud === 'function') {
         const list = words.map(w => {
             const ratio = maxCount === minCount ? 0.5 : (w.count - minCount) / (maxCount - minCount);
-            const size = Math.round(16 + Math.pow(ratio, 0.65) * 44);
+            const size = Math.round(14 + Math.pow(ratio, 0.65) * 36);
             return [w.word, size, w.count];
         });
 
@@ -2488,6 +2520,7 @@ function renderWordCloud(data) {
                 backgroundColor: 'transparent',
                 shuffle: true,
                 drawOutOfBound: false,
+                shrinkToFit: true,
                 click: function(item) {
                     if (item && item[0]) {
                         openSaranExplorer('ALL', 'ALL', item[0], 'ALL');
@@ -2533,8 +2566,8 @@ function renderSentimentDonut(data) {
     if (!el || !data.summary) return;
 
     const paletteMap = {
-        'Positif': '#02C5BE',
-        'Saran Perbaikan': '#ff9800',
+        'Positif': '#1b5e20',
+        'Saran Perbaikan': '#fff32b',
         'Netral': '#64748b'
     };
 
@@ -2547,14 +2580,16 @@ function renderSentimentDonut(data) {
             datasets: [{
                 data: data.summary.map(s => s.count),
                 backgroundColor: bgColors,
-                borderWidth: 0,
-                cutout: '75%',
+                borderWidth: 2,
+                borderColor: '#ffffff',
+                cutout: '60%',
                 hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            layout: { padding: 30 },
             plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -2566,7 +2601,12 @@ function renderSentimentDonut(data) {
                     }
                 },
                 datalabels: {
-                    color: '#fff',
+                    anchor: 'center',
+                    align: 'center',
+                    color: function(ctx) {
+                        const label = data.summary[ctx.dataIndex].label;
+                        return label === 'Saran Perbaikan' ? '#1b5e20' : '#ffffff';
+                    },
                     font: { weight: 'bold', size: 13 },
                     formatter: function(val, ctx) {
                         const pct = data.summary[ctx.dataIndex].percentage;
@@ -2596,7 +2636,7 @@ function renderSentimentSamples(data) {
 
     const sentimentConfig = {
         'Positif': { icon: 'sentiment_satisfied', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
-        'Saran Perbaikan': { icon: 'sentiment_dissatisfied', color: '#02C5BE', bg: 'rgba(2,197,190,0.12)' },
+        'Saran Perbaikan': { icon: 'sentiment_dissatisfied', color: '#1b5e20', bg: 'rgba(27,94,32,0.12)' },
         'Netral': { icon: 'sentiment_neutral', color: '#64748b', bg: 'rgba(100,116,139,0.12)' }
     };
 
@@ -2649,7 +2689,7 @@ function renderTopicBarChart(data) {
     if (!el || !data.topics) return;
 
     const topicIcons = {
-        'Aplikasi & Teknologi PSB': '#02C5BE',
+        'Aplikasi & Teknologi PSB': '#1b5e20',
         'Pembayaran & Biaya': '#00897B',
         'Pelayanan & Responsivitas': '#10b981',
         'Fasilitas & Infrastruktur': '#0d9488',
@@ -2718,7 +2758,7 @@ function renderTopicAccordion(data) {
     if (!container || !data.topics) return;
 
     const topicConfig = {
-        'Aplikasi & Teknologi PSB': { icon: 'devices', color: '#02C5BE', bg: 'rgba(2,197,190,0.12)' },
+        'Aplikasi & Teknologi PSB': { icon: 'devices', color: '#1b5e20', bg: 'rgba(27,94,32,0.12)' },
         'Pembayaran & Biaya': { icon: 'payments', color: '#00897B', bg: 'rgba(0,137,123,0.12)' },
         'Pelayanan & Responsivitas': { icon: 'support_agent', color: '#10b981', bg: 'rgba(16,185,129,0.12)' },
         'Fasilitas & Infrastruktur': { icon: 'apartment', color: '#0d9488', bg: 'rgba(13,148,136,0.12)' },
